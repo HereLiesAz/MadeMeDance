@@ -1,0 +1,23 @@
+:root {
+    --dokka-logo-image-url: url('../images/shazamkitlogo.png');
+    --dokka-logo-height: 75px;
+    --dokka-logo-width: 75px;
+}
+
+.library-name--link {
+	height: 80px;
+	margin-top: 2px;
+	margin-bottom: 2px;
+}
+/* logo custom rules styles */
+.library-name--link::before {
+    	background: var(--dokka-logo-image-url) center no-repeat;
+        background-size: min(var(--dokka-logo-height),125px) min(var(--dokka-logo-width),125px);
+        content: "";
+        height: var(--dokka-logo-height);
+        margin-right: 8px;
+        margin-right: var(--size-s2);
+        max-height: 125px;
+        max-width: 125px;
+        width: var(--dokka-logo-width);
+}

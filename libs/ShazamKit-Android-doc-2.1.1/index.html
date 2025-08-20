@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>shazamkit</title>
+    <link href="images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="scripts/sourceset_dependencies.js" async="async"></script>
+<link href="styles/style.css" rel="Stylesheet">
+<link href="styles/main.css" rel="Stylesheet">
+<link href="styles/prism.css" rel="Stylesheet">
+<link href="styles/logo-styles.css" rel="Stylesheet">
+<link href="styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="ui-kit/ui-kit.min.js" defer="defer"></script>
+<script type="text/javascript" src="scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+<link href="images/shazamkitlogo.png">
+<link href="styles/logo-styles.css" rel="Stylesheet">
+</head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="index.html">
+                    shazamkit
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+2.1.1        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":library:dokkaHtml/release">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":library:dokkaHtml/release"
+                                       data-filter=":library:dokkaHtml/release"/>
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    shazamkit
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" id="content" pageIds="shazamkit::////PointingToDeclaration//-1887420133">
+  <div class="breadcrumbs"></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>shazamkit</span></span></h1>
+    <div class="platform-hinted UnderCoverText" data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><p class="paragraph">This documentation is intended for Android Developers that wish to integrate audio recognition to their applications.</p><h2 class="">Set up</h2><p class="paragraph">ShazamKit comes in the form of an <a href="https://developer.android.com/studio/projects/android-library">Android Archive (AAR) file</a>. Once downloaded, place the file in the <code class="lang-kotlin">libs</code> directory in the root of your project. You may need to create the directory if it does not already exist. In order for Gradle to recognize any dependencies coming from the <code class="lang-kotlin">libs</code> directory, the following snippet needs to be included in the top level <code class="lang-kotlin">build.gradle</code> file:</p><div class="sample-container"><pre><code class="block lang-groovy" theme="idea">allprojects {<br>    repositories {<br>        flatDir {<br>            dirs 'libs'<br>        }<br>    }<br>}</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Lastly, specify the dependency in your <code class="lang-kotlin">app/build.gradle</code> file within the <code class="lang-kotlin">dependencies</code> block along with the <a href="https://kotlinlang.org/docs/coroutines-overview.html">Kotlin Coroutines</a>, <a href="https://square.github.io/okhttp/">OkHttp</a> and <a href="https://square.github.io/retrofit/">Retrofit</a> libraries which are used by ShazamKit like so:</p><div class="sample-container"><pre><code class="block lang-groovy" theme="idea">dependencies {<br>    implementation(name: &quot;shazamkit-android-release&quot;, ext: &quot;aar&quot;)<br>    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0'<br>    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0'<br>    implementation 'com.squareup.okhttp3:okhttp:4.12.0'<br>    implementation 'com.squareup.retrofit2:retrofit:2.11.0'<br>    implementation 'com.squareup.retrofit2:converter-gson:2.11.0'<br>}</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">For more information on how to include an AAR file in your project, see the <a href="https://developer.android.com/studio/build/dependencies">Android Developers documentation</a>.</p><h3 class="">Basic audio recognition using Session</h3><p class="paragraph">The following snippet performs basic audio recognition on pre-recorded audio data using the <a href="shazamkit/com.shazam.shazamkit/-shazam-catalog/index.html">ShazamCatalog</a>.</p><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">val signatureGenerator = (ShazamKit.createSignatureGenerator(AudioSampleRateInHz.SAMPLE_RATE_48000) as Success).data<br><br>signatureGenerator.append(bytes, meaningfulLengthInBytes, System.currentTimeMillis())<br>val signature = signatureGenerator.generateSignature()<br><br>val catalog = ShazamKit.createShazamCatalog(developerTokenProvider, selectedLocale.value)<br>val session = (ShazamKit.createSession(catalog) as Success).data<br>val matchResult = session.match(signature)</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">The recognition is performed as soon as a <a href="shazamkit/com.shazam.shazamkit/-session/index.html">Session</a> is passed a <a href="shazamkit/com.shazam.shazamkit/-signature/index.html">Signature</a> to match. The snippet uses the <a href="shazamkit/com.shazam.shazamkit/-signature-generator/index.html">SignatureGenerator</a> in order to process a given recorded audio into a Signature.</p><p class="paragraph">Depending on the Sample rate of your recorded audio, you might want to adjust the com.shazam.shazamkit.AudioSampleRateInHz accordingly.</p><p class="paragraph">Note that in order to use the <a href="shazamkit/com.shazam.shazamkit/-shazam-catalog/index.html">ShazamCatalog</a> you need to have an <a href="https://developer.apple.com/help/account/configure-app-capabilities/create-a-media-identifier-and-private-key">Apple Developer token</a>, which you need to provide using your own <a href="shazamkit/com.shazam.shazamkit/-developer-token-provider/index.html">DeveloperTokenProvider</a>.</p><p class="paragraph">Apps that intent to use the Shazam Catalog will require Internet access. Make sure to include the <a href="https://developer.android.com/reference/android/Manifest.permission#INTERNET">INTERNET</a> permission in your application's Manifest file.</p><h4 class="">Error handling</h4><p class="paragraph">All examples in this documentation are handling happy cases only. In a real-world application developers would want to carefully handle any case where a <a href="shazamkit/com.shazam.shazamkit/-shazam-kit-result/-failure/index.html">Failure</a> might be returned from a ShazamKit operation. A convenient way of doing so is by using Kotlin's <code class="lang-kotlin">when</code> to process the output <a href="shazamkit/com.shazam.shazamkit/-shazam-kit-result/index.html">ShazamKitResult</a>.</p><h3 class="">Continuous audio recognition using StreamingSession</h3><p class="paragraph">ShazamKit supports continuous audio recognition by flowing audio into <a href="shazamkit/com.shazam.shazamkit/-streaming-session/index.html">StreamingSession</a>. Here is how it looks like:</p><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">val catalog = (ShazamKit.createShazamCatalog(developerTokenProvider) as Success).data<br>val currentSession = (ShazamKit.createStreamingSession(<br>    catalog,<br>    AudioSampleRateInHz.SAMPLE_RATE_48000,<br>    readBufferSize<br>) as Success).data<br><br>coroutineScope.launch {<br>    // record audio and flow it to the StreamingSession<br>    recordingFlow().collect { audioChunk -&gt;<br>        currentSession?.matchStream(<br>            audioChunk.buffer,<br>            audioChunk.meaningfulLengthInBytes,<br>            audioChunk.timestamp<br>        )<br>    }<br>}<br><br>coroutineScope.launch {<br>    currentSession?.recognitionResults().collect { matchResult -&gt;<br>        println(&quot;Received MatchResult: $matchResult&quot;)<br>    }<br>}</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><h3 class="">Audio recognition using a CustomCatalog</h3><p class="paragraph">Developers can provide their own catalog instead of using the default Shazam Catalog. A <a href="shazamkit/com.shazam.shazamkit/-custom-catalog/index.html">CustomCatalog</a> can be used both in a <a href="shazamkit/com.shazam.shazamkit/-session/index.html">Session</a> or a <a href="shazamkit/com.shazam.shazamkit/-streaming-session/index.html">StreamingSession</a> when using <a href="shazamkit/com.shazam.shazamkit/-shazam-kit/create-session.html">ShazamKit.createSession()</a> or <a href="shazamkit/com.shazam.shazamkit/-shazam-kit/create-streaming-session.html">ShazamKit.createStreamingSession()</a> respectively. There are no limitations on how or where you can store your Custom Catalog files.</p><p class="paragraph">The catalog in the following snippet is loaded from a local <a href="https://developer.android.com/reference/android/net/Uri">Uri</a> retrieved using the <a href="https://developer.android.com/training/data-storage/shared/documents-files">ACTION_OPEN_DOCUMENT</a> Intent action:</p><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">val inputStreaming = contentResolver.openInputStream(uri)<br>val customCatalog = ShazamKit.createCustomCatalog()<br>    .apply { addFromCatalog(inputStreaming) }<br><br>val session = (ShazamKit.createSession(catalog) as Success).data<br>val matchResult = session.match(signature)    </code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Custom catalogs support:</p><ul><li><p class="paragraph">Timed Media Items: Implement exact audio matching by specificing when an event starts and stops by specifying time ranges. For a deeper overview please refer to https://developer.apple.com/videos/play/wwdc2022/10028/</p></li><li><p class="paragraph">Frequency Skew Ranges: The range specifies as a percentage how much the audio differs from the original. A value of zero indicates the audio is unskewed and a value of .01 indicates a 1 percent skew.  For a deeper overview please refer to https://developer.apple.com/videos/play/wwdc2022/10028/</p></li></ul><h2 class="">Requirements</h2><ul><li><p class="paragraph">minSdkVersion 21</p></li><li><p class="paragraph"><a href="https://developer.android.com/kotlin/">Kotlin</a></p></li></ul><h2 class="">Changelog</h2><ul><li><p class="paragraph">ShazamKit 2.0</p></li><ul><li><p class="paragraph">Adds “Timed Media Items&quot; </p></li><li><p class="paragraph">Adds &quot;Frequency Skew Ranges&quot;</p></li></ul><li><p class="paragraph">ShazamKit 2.0.1</p></li><ul><li><p class="paragraph">Updates link to &quot;Create a media identifier&quot; webpage </p></li></ul><li><p class="paragraph">ShazamKit 2.0.2</p></li><ul><li><p class="paragraph">Lowers the &quot;minSdkVersion&quot; to 21</p></li></ul><li><p class="paragraph">ShazamKit 2.1.0</p></li><ul><li><p class="paragraph">Adds support for 16 KB page sizes</p></li><li><p class="paragraph">Updates dependencies versions</p></li></ul><li><p class="paragraph">ShazamKit 2.1.1</p></li><ul><li><p class="paragraph">Improves audio recognition. No API changes.</p></li></ul></ul><h2 class="">Record from Microphone</h2><p class="paragraph">Developers can provide the SDK with audio obtained from any source as long as the audio format is PCM 16bit MONO in one of the following sample rates: 48000Hz, 44100Hz, 32000Hz, 16000Hz. For more details see <a href="shazamkit/com.shazam.shazamkit/-shazam-kit/create-streaming-session.html">ShazamKit.createStreamingSession()</a> or <a href="shazamkit/com.shazam.shazamkit/-shazam-kit/create-signature-generator.html">ShazamKit.createSignatureGenerator()</a>.</p><p class="paragraph">Here is an example you can use as starting point for audio recording in Android:</p><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">    @RequiresPermission(Manifest.permission.RECORD_AUDIO)<br>    @WorkerThread<br>    private fun simpleMicRecording(catalog: Catalog) : ByteArray{<br>        val audioSource = MediaRecorder.AudioSource.UNPROCESSED<br><br>        val audioFormat = AudioFormat.Builder()<br>            .setChannelMask(AudioFormat.CHANNEL_IN_MONO)<br>            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)<br>            .setSampleRate(48_000)<br>            .build()<br><br>        val audioRecord = AudioRecord.Builder()<br>            .setAudioSource(audioSource)<br>            .setAudioFormat(audioFormat)<br>            .build()<br><br>        val seconds = catalog.maximumQuerySignatureDurationInMs<br><br>        // Final desired buffer size to allocate 12 seconds of audio<br>        val size = audioFormat.sampleRate * audioFormat.encoding.toByteAllocation() * seconds<br>        val destination = ByteBuffer.allocate(size)<br><br>        // Small buffer to retrieve chunks of audio<br>        val bufferSize = AudioRecord.getMinBufferSize(<br>            48_000,<br>            AudioFormat.CHANNEL_IN_MONO,<br>            AudioFormat.ENCODING_PCM_16BIT<br>        )<br><br>        // Make sure you are on a dedicated thread or thread pool for mic recording only and<br>        // elevate the priority to THREAD_PRIORITY_URGENT_AUDIO<br>        Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO)<br><br>        audioRecord.startRecording()<br>        val readBuffer = ByteArray(bufferSize)<br>        while (destination.remaining()&gt;0) {<br>            val actualRead = audioRecord.read(readBuffer, 0, bufferSize)<br>            val byteArray = readBuffer.sliceArray(0 until actualRead)<br>            destination.putTrimming(byteArray)<br>        }<br>        audioRecord.release()<br>        return destination.array()<br>    }<br><br>    private fun Int.toByteAllocation(): Int {<br>        return when (this) {<br>            AudioFormat.ENCODING_PCM_16BIT -&gt; 2<br>            else -&gt; throw IllegalArgumentException(&quot;Unsupported encoding&quot;)<br>            }<br>    }<br><br>    fun ByteBuffer.putTrimming(byteArray: ByteArray) {<br>        if (byteArray.size &lt;= this.capacity() - this.position()) {<br>            this.put(byteArray)<br>        } else {<br>            this.put(byteArray, 0, this.capacity() - this.position())<br>        }<br>    }</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">For further details you can seek more information in <a href="https://developer.android.com/reference/android/media/AudioRecord">Android Developers Documentation</a>.</p></div></div>
+  </div>
+  <h2 class="">Packages</h2>
+  <div class="table"><a data-name="-1221067497%2FPackages%2F-1887420133" anchor-label="com.shazam.shazamkit" id="-1221067497%2FPackages%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+    <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+      <div>
+        <div class="main-subrow ">
+          <div class=""><span class="inline-flex">
+              <div><a href="shazamkit/com.shazam.shazamkit/index.html">com.shazam.shazamkit</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1221067497%2FPackages%2F-1887420133"></span>
+                <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+              </span></span></div>
+          <div class="pull-right">
+            <div class="platform-tags no-gutters">
+              <div class="platform-tag jvm-like">androidJvm</div>
+            </div>
+          </div>
+        </div>
+        <div></div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>Copyright © <script>document.write(new Date().getFullYear())</script> Apple Inc.  All rights reserved.</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>MatchedMediaItem</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+<link href="../../../images/shazamkitlogo.png">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+</head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../../index.html">
+                    shazamkit
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+2.1.1        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":library:dokkaHtml/release">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":library:dokkaHtml/release"
+                                       data-filter=":library:dokkaHtml/release"/>
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    shazamkit
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="shazamkit::com.shazam.shazamkit/MatchedMediaItem///PointingToDeclaration//-1887420133">
+  <div class="breadcrumbs"><a href="../../../index.html">shazamkit</a><span class="delimiter">/</span><a href="../index.html">com.shazam.shazamkit</a><span class="delimiter">/</span><span class="current">MatchedMediaItem</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Matched</span><wbr></wbr><span>Media</span><wbr></wbr><span><span>Item</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">MatchedMediaItem</a> : <a href="../-media-item/index.html">MediaItem</a></div><p class="paragraph"><a href="index.html">MatchedMediaItem</a> represents metadata that has been matched against a <a href="../-catalog/index.html">Catalog</a>.</p><p class="paragraph">Extra information is presented that can only be generated from a match. The properties provided here are ephemeral and can differ each time there is a match of the <a href="../-signature/index.html">Signature</a> that this object represents.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="-383740795%2FProperties%2F-1887420133" anchor-label="appleMusicID" id="-383740795%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/apple-music-i-d.html"><span>apple</span><wbr></wbr><span>Music</span><wbr></wbr><span><span>ID</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-383740795%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-media-item/apple-music-i-d.html">appleMusicID</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The AppleMusic ID.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1133724629%2FProperties%2F-1887420133" anchor-label="appleMusicURL" id="-1133724629%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/apple-music-u-r-l.html"><span>apple</span><wbr></wbr><span>Music</span><wbr></wbr><span><span>URL</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1133724629%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-media-item/apple-music-u-r-l.html">appleMusicURL</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/java/net/URL.html">URL</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">A link to this media on Apple Music.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1728653276%2FProperties%2F-1887420133" anchor-label="artist" id="-1728653276%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/artist.html"><span><span>artist</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1728653276%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-media-item/artist.html">artist</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The Artist.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="332878352%2FProperties%2F-1887420133" anchor-label="artworkURL" id="332878352%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/artwork-u-r-l.html"><span>artwork</span><wbr></wbr><span><span>URL</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="332878352%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-media-item/artwork-u-r-l.html">artworkURL</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/java/net/URL.html">URL</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">A URL to the artwork.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1527687766%2FProperties%2F-1887420133" anchor-label="explicitContent" id="-1527687766%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/explicit-content.html"><span>explicit</span><wbr></wbr><span><span>Content</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1527687766%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-media-item/explicit-content.html">explicitContent</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Is this content explicit.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1044533113%2FProperties%2F-1887420133" anchor-label="frequencySkew" id="1044533113%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="frequency-skew.html"><span>frequency</span><wbr></wbr><span><span>Skew</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1044533113%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="frequency-skew.html">frequencySkew</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-float/index.html">Float</a><span class="token operator">?</span><span class="token operator"> = </span>null</div><div class="brief "><p class="paragraph">The frequency difference between the reference and sample audio. A value of 0.0 indicates the matched audio at the original frequency, a value of 0.1 indicates 100hz is now 110hz.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-829505229%2FProperties%2F-1887420133" anchor-label="frequencySkewRanges" id="-829505229%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/frequency-skew-ranges.html"><span>frequency</span><wbr></wbr><span>Skew</span><wbr></wbr><span><span>Ranges</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-829505229%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-media-item/frequency-skew-ranges.html">frequencySkewRanges</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-half-closed-double-range/index.html">HalfClosedDoubleRange</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">A <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a> of <a href="../-half-closed-double-range/index.html">HalfClosedDoubleRange</a> that indicate the frequency skew compared to the reference signature</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1759018043%2FProperties%2F-1887420133" anchor-label="genres" id="1759018043%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/genres.html"><span><span>genres</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1759018043%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-media-item/genres.html">genres</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Genres.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-546994032%2FProperties%2F-1887420133" anchor-label="isrc" id="-546994032%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/isrc.html"><span><span>isrc</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-546994032%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-media-item/isrc.html">isrc</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The ISRC (International Standard Recording Code).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1382116964%2FProperties%2F-1887420133" anchor-label="matchOffsetInMs" id="-1382116964%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="match-offset-in-ms.html"><span>match</span><wbr></wbr><span>Offset</span><wbr></wbr><span>In</span><wbr></wbr><span><span>Ms</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1382116964%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="match-offset-in-ms.html">matchOffsetInMs</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-float/index.html">Float</a><span class="token operator">?</span><span class="token operator"> = </span>null</div><div class="brief "><p class="paragraph">The difference between the start of the reference audio and the start of the sample audio.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1732697288%2FProperties%2F-1887420133" anchor-label="predictedCurrentMatchOffset" id="1732697288%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="predicted-current-match-offset.html"><span>predicted</span><wbr></wbr><span>Current</span><wbr></wbr><span>Match</span><wbr></wbr><span><span>Offset</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1732697288%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="predicted-current-match-offset.html">predictedCurrentMatchOffset</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-float/index.html">Float</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The auto updating playback position in the reference signature.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1409862890%2FProperties%2F-1887420133" anchor-label="shazamID" id="-1409862890%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/shazam-i-d.html"><span>shazam</span><wbr></wbr><span><span>ID</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1409862890%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-media-item/shazam-i-d.html">shazamID</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The unique ShazamID.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1701409549%2FProperties%2F-1887420133" anchor-label="subtitle" id="-1701409549%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/subtitle.html"><span><span>subtitle</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1701409549%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-media-item/subtitle.html">subtitle</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Subtitle.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="359730152%2FProperties%2F-1887420133" anchor-label="timeRanges" id="359730152%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/time-ranges.html"><span>time</span><wbr></wbr><span><span>Ranges</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="359730152%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-media-item/time-ranges.html">timeRanges</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-half-closed-double-range/index.html">HalfClosedDoubleRange</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">A <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a> of <a href="../-half-closed-double-range/index.html">HalfClosedDoubleRange</a> that indicate the offsets within the reference signature that this media item describes</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1601422121%2FProperties%2F-1887420133" anchor-label="title" id="-1601422121%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/title.html"><span><span>title</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1601422121%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-media-item/title.html">title</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Title.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1616320105%2FProperties%2F-1887420133" anchor-label="videoURL" id="-1616320105%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/video-u-r-l.html"><span>video</span><wbr></wbr><span><span>URL</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1616320105%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-media-item/video-u-r-l.html">videoURL</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/java/net/URL.html">URL</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">A URL for a Video associated with the media.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-153580432%2FProperties%2F-1887420133" anchor-label="webURL" id="-153580432%2FProperties%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/web-u-r-l.html"><span>web</span><wbr></wbr><span><span>URL</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-153580432%2FProperties%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-media-item/web-u-r-l.html">webURL</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/java/net/URL.html">URL</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">A web URL representing this result.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="-199879450%2FFunctions%2F-1887420133" anchor-label="equals" id="-199879450%2FFunctions%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="equals.html"><span><span>equals</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-199879450%2FFunctions%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">operator override </span><span class="token keyword">fun </span><a href="equals.html"><span class="token function">equals</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="247808907%2FFunctions%2F-1887420133" anchor-label="get" id="247808907%2FFunctions%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/get.html"><span><span>get</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="247808907%2FFunctions%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-media-item/get.html"><span class="token function">get</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">key<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Fetch a custom parameter given its key.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1426728640%2FFunctions%2F-1887420133" anchor-label="hashCode" id="-1426728640%2FFunctions%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="hash-code.html"><span>hash</span><wbr></wbr><span><span>Code</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1426728640%2FFunctions%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="hash-code.html"><span class="token function">hashCode</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1053920543%2FFunctions%2F-1887420133" anchor-label="toString" id="1053920543%2FFunctions%2F-1887420133" data-filterable-set=":library:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":library:dokkaHtml/release" data-filterable-set=":library:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-media-item/to-string.html"><span>to</span><wbr></wbr><span><span>String</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1053920543%2FFunctions%2F-1887420133"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":library:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-media-item/to-string.html"><span class="token function">toString</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>Copyright © <script>document.write(new Date().getFullYear())</script> Apple Inc.  All rights reserved.</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
