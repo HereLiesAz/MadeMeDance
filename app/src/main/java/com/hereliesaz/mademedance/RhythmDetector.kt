@@ -9,56 +9,63 @@ import java.util.*
 
 class RhythmDetector {
 
-    private val windowSize = 20 // Number of samples to analyze
-    private val dataQueue = ArrayDeque<FloatArray>(windowSize)
-    private var previousTimestamp: Long = 0
+    private val windowSize = 128 // Increased window size for better frequency resolution
+    private val dataQueue = ArrayDeque<Pair<Long, FloatArray>>(windowSize)
+    private val magnitudeThreshold = 20.0 // Adjusted threshold for significant movement
 
-    fun detectRhythm(gyroValues: FloatArray): Boolean {
-        val timestamp = System.currentTimeMillis()
-        val deltaTime = (timestamp - previousTimestamp) / 1000f // Time in seconds
-        previousTimestamp = timestamp
+    fun getMovementBpm(event: SensorEvent): Float? {
+        val timestamp = event.timestamp
+        val gyroValues = event.values
 
-        // Add to queue and maintain window size
-        dataQueue.addLast(gyroValues)
+        dataQueue.addLast(Pair(timestamp, gyroValues))
         if (dataQueue.size > windowSize) {
             dataQueue.removeFirst()
         }
 
-        // Analyze only when the window is full
-        if (dataQueue.size == windowSize) {
-            // Fourier Transform analysis
-            val transformer = FastFourierTransformer(DftNormalization.STANDARD)
-            val complexData = dataQueue.flatMap { it.map { Complex(it.toDouble()) } }.toTypedArray()
-            val results = transformer.transform(complexData, TransformType.FORWARD)
-
-            // Focus on lower frequencies for rhythmic patterns (adjust range)
-            val frequencies = results.copyOfRange(1, results.size / 2)  // Skip DC component
-            val magnitudes = frequencies.map { it.abs() }
-
-            // Find dominant frequency and its magnitude
-            val maxMagnitudeIndex = magnitudes.indices.maxByOrNull { magnitudes[it] } ?: 0
-            val maxMagnitude = magnitudes[maxMagnitudeIndex]
-            val dominantFrequency = maxMagnitudeIndex + 1 // Account for skipped DC
-
-            // Thresholds for rhythm detection (adjust these!)
-            val magnitudeThreshold = 0.1  // Minimum magnitude of dominant frequency
-            val frequencyThreshold = 5.0  // Maximum frequency for rhythm (Hz)
-
-            val isRhythmic = (maxMagnitude > magnitudeThreshold) &&
-                    (dominantFrequency < frequencyThreshold)
-
-            // Logging (optional, for debugging)
-            //Log.d("RhythmDetector", "Dominant Freq: $dominantFrequency, MaxMag: $maxMagnitude, Rhythmic: $isRhythmic")
-
-            return isRhythmic
+        if (dataQueue.size < windowSize) {
+            return null // Not enough data yet
         }
-        return false
-    }
 
-    // Helper function (from previous response)
-    private fun Iterable<Float>.standardDeviation(): Float {
-        val mean = this.average()
-        val sumOfSquaredDeviations = this.sumOf { (it - mean) * (it - mean) }
-        return kotlin.math.sqrt(sumOfSquaredDeviations / this.count().toFloat())
+        val firstTimestamp = dataQueue.first.first
+        val lastTimestamp = dataQueue.last.first
+        val durationNanos = lastTimestamp - firstTimestamp
+        if (durationNanos == 0L) return null
+
+        // Calculate the sampling rate in Hz
+        val sampleRate = (windowSize.toDouble() / durationNanos) * 1_000_000_000.0
+
+        // We'll analyze the magnitude of the gyroscope vector
+        val magnitudes = dataQueue.map {
+            val x = it.second[0]
+            val y = it.second[1]
+            val z = it.second[2]
+            Math.sqrt((x * x + y * y + z * z).toDouble())
+        }
+
+        val transformer = FastFourierTransformer(DftNormalization.STANDARD)
+        val complexData = magnitudes.map { Complex(it) }.toTypedArray()
+        val fftResults = transformer.transform(complexData, TransformType.FORWARD)
+
+        var maxMagnitude = -1.0
+        var dominantFrequencyIndex = 0
+        // Iterate up to half the window size (Nyquist theorem)
+        for (i in 1 until windowSize / 2) {
+            val mag = fftResults[i].abs()
+            if (mag > maxMagnitude) {
+                maxMagnitude = mag
+                dominantFrequencyIndex = i
+            }
+        }
+
+        if (maxMagnitude > magnitudeThreshold) {
+            val dominantFrequencyHz = dominantFrequencyIndex * sampleRate / windowSize
+            // Convert to BPM, but only for a reasonable dance tempo range (e.g., 60-180 BPM)
+            val bpm = (dominantFrequencyHz * 60).toFloat()
+            if (bpm in 60f..180f) {
+                return bpm
+            }
+        }
+
+        return null
     }
 }

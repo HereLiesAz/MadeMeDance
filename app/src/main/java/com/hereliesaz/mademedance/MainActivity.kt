@@ -1,132 +1,159 @@
-package com.hereliesaz.mademedance // Your package name
+package com.hereliesaz.mademedance
 
-// ... (imports for playlist handling, etc.)
-// ... other imports ...
-import android.content.BroadcastReceiver
-import android.content.ComponentName
-import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
-import android.provider.MediaStore
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.hereliesaz.mademedance.ui.MainScreen
+import com.hereliesaz.mademedance.ui.theme.MadeMeDanceTheme
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import java.io.File
+import java.io.IOException
 
+class MainActivity : ComponentActivity(), SensorEventListener {
 
-abstract class MainActivity : AppCompatActivity(), SensorEventListener {
+    private val _movementBpm = MutableStateFlow<Float?>(null)
+    private val _audioBpm = MutableStateFlow<Float?>(null)
+
+    private val _movementStatus = MutableStateFlow("Movement: -- BPM")
+    val movementStatus = _movementStatus.asStateFlow()
+    private val _audioStatus = MutableStateFlow("Song: -- BPM")
+    val audioStatus = _audioStatus.asStateFlow()
+    private val _systemStatus = MutableStateFlow("Listening...")
+    val systemStatus = _systemStatus.asStateFlow()
+
     private lateinit var sensorManager: SensorManager
     private var gyroscopeSensor: Sensor? = null
-    private val rhythmDetector = RhythmDetector() // Hypothetical class for analysis
+    private val rhythmDetector = RhythmDetector()
+
+    private val audioBpmDetector = AudioBpmDetector()
+    private var audioJob: kotlinx.coroutines.Job? = null
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                _systemStatus.value = "Microphone permission granted. Listening..."
+                startAudioProcessing()
+            } else {
+                _systemStatus.value = "Microphone permission denied."
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main) // Your layout file
 
-        // Initialize sensor manager and gyroscope
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
 
-        // ... (UI elements for toggle, sensitivity, status)
+        setContent {
+            MadeMeDanceTheme {
+                val movement by movementStatus.collectAsState()
+                val audio by audioStatus.collectAsState()
+                val system by systemStatus.collectAsState()
+                MainScreen(
+                    movementStatus = movement,
+                    audioStatus = audio,
+                    systemStatus = system,
+                    onPermissionClick = { requestPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO) }
+                )
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        gyroscopeSensor?.also { gyro ->
-            sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_NORMAL)
-        }
+        startListening()
     }
 
     override fun onPause() {
         super.onPause()
+        stopListening()
+        stopAudioProcessing()
+    }
+
+    private fun startAudioProcessing() {
+        audioJob?.cancel()
+        audioJob = MainScope().launch {
+            audioBpmDetector.start()
+            while (isActive) {
+                val bpm = audioBpmDetector.processAudio()
+                if (bpm != null) {
+                    _audioBpm.value = bpm
+                    _audioStatus.value = "Song: ${"%.1f".format(bpm)} BPM"
+                    checkForMatch()
+                }
+                kotlinx.coroutines.delay(100)
+            }
+        }
+    }
+
+    private fun stopAudioProcessing() {
+        audioJob?.cancel()
+        audioBpmDetector.stop()
+    }
+
+    private fun startListening() {
+        gyroscopeSensor?.also { gyro ->
+            sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME)
+        }
+    }
+
+    private fun stopListening() {
         sensorManager.unregisterListener(this)
     }
 
-    // ... (other lifecycle methods)
-
-    // Handle gyroscope events
     override fun onSensorChanged(event: SensorEvent?) {
-
-
         if (event?.sensor?.type == Sensor.TYPE_GYROSCOPE) {
-            val values = event.values
-        if (rhythmDetector.detectRhythm(values) && currentSong != null) {
-            addToPlaylist(currentSong!!, "Made Me Dance")
-            val currentSong = getCurrentSong()
-
-            // Feedback (optional)
-            Toast.makeText(this, "Added to playlist: $currentSong", Toast.LENGTH_SHORT).show()
-        }
-        }
-    }
-
-    private fun addToPlaylist(currentSong: String, s: String) {
-
-    }
-
-    // ... (helper functions: getCurrentSong, addToPlaylist)
-    private fun getCurrentSong(): String? {
-        val packageManager = packageManager
-        val componentName = ComponentName("com.google.android.googlequicksearchbox", "com.google.android.apps.search.soundsearch.SoundSearchService")
-        if (packageManager.getComponentEnabledSetting(componentName) != PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
-            return null // Now Playing is not enabled
-        }
-
-        val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-        val projection = arrayOf(MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.ARTIST)
-        val selection = "${MediaStore.Audio.Media.IS_MUSIC} = 1"
-        val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
-
-        contentResolver.query(uri, projection, selection, null, sortOrder)?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val title = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE))
-                val artist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST))
-                return "$title - $artist"
-            }
-        }
-        return null
-    }
-
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) { /* Not used here */ }
-}
-
-
-
-// ... inside MainActivity class ...
-
-private var currentSong: String? = null
-private lateinit var nlServiceReceiver: BroadcastReceiver
-
-fun onResume() {
-    super.onResume()
-    // ... (gyroscope registration)
-
-    nlServiceReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == NLService.ACTION_UPDATE_CURRENT_SONG) {
-                currentSong = intent.getStringExtra(NLService.EXTRA_SONG_TITLE)
-                // ... (update UI or use in rhythm detection logic)
+            val bpm = rhythmDetector.getMovementBpm(event)
+            if (bpm != null) {
+                _movementBpm.value = bpm
+                _movementStatus.value = "Movement: ${"%.1f".format(bpm)} BPM"
+                checkForMatch()
             }
         }
     }
 
-    registerReceiver(nlServiceReceiver, IntentFilter(NLService.ACTION_UPDATE_CURRENT_SONG))
+    private fun checkForMatch() {
+        val movementBpm = _movementBpm.value
+        val audioBpm = _audioBpm.value
+
+        if (movementBpm != null && audioBpm != null) {
+            if (kotlin.math.abs(movementBpm - audioBpm) < 5.0) {
+                _systemStatus.value = "BPM Match Found! Saving snippet..."
+                saveAudioSnippet()
+                _movementBpm.value = null
+                _audioBpm.value = null
+            }
+        }
+    }
+
+    private fun saveAudioSnippet() {
+        try {
+            val timestamp = System.currentTimeMillis()
+            val file = File(getExternalFilesDir(null), "MadeMeDance_snippet_$timestamp.wav")
+            audioBpmDetector.saveSnippet(file)
+            _systemStatus.value = "Snippet saved to ${file.name}"
+        } catch (e: IOException) {
+            _systemStatus.value = "Error saving snippet."
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) { /* Not used */ }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopListening()
+        stopAudioProcessing()
+    }
 }
-
-override fun onPause() {
-    super.onPause()
-    // ... (unregister gyroscope)
-    unregisterReceiver(nlServiceReceiver)
-}
-
-fun unregisterReceiver(nlServiceReceiver: BroadcastReceiver) {
-
-}
-
-// ... inside onSensorChanged ...
-
-
-// ... rest of MainActivity class ...
-
