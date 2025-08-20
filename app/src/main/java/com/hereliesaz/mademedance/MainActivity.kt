@@ -1,132 +1,114 @@
-package com.hereliesaz.mademedance // Your package name
+package com.hereliesaz.mademedance
 
-// ... (imports for playlist handling, etc.)
-// ... other imports ...
 import android.content.BroadcastReceiver
-import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
-import android.provider.MediaStore
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.hereliesaz.mademedance.ui.MainScreen
+import com.hereliesaz.mademedance.ui.theme.MadeMeDanceTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
+class MainActivity : ComponentActivity(), SensorEventListener {
 
-abstract class MainActivity : AppCompatActivity(), SensorEventListener {
+    private val _currentSong = MutableStateFlow("No song detected")
+    private val currentSong = _currentSong.asStateFlow()
+
+    private val _status = MutableStateFlow("Listening for dance moves...")
+    private val status = _status.asStateFlow()
+
+    private lateinit var nlServiceReceiver: BroadcastReceiver
+
     private lateinit var sensorManager: SensorManager
     private var gyroscopeSensor: Sensor? = null
-    private val rhythmDetector = RhythmDetector() // Hypothetical class for analysis
+    private val rhythmDetector = RhythmDetector()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main) // Your layout file
 
-        // Initialize sensor manager and gyroscope
+        nlServiceReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                val title = intent.getStringExtra(NLService.EXTRA_SONG_TITLE)
+                val artist = intent.getStringExtra(NLService.EXTRA_SONG_ARTIST)
+                if (title != null && artist != null) {
+                    _currentSong.value = "$title by $artist"
+                }
+            }
+        }
+        registerReceiver(nlServiceReceiver, IntentFilter(NLService.ACTION_UPDATE_CURRENT_SONG), RECEIVER_NOT_EXPORTED)
+
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
 
-        // ... (UI elements for toggle, sensitivity, status)
+        if (!isNotificationServiceEnabled()) {
+            _status.value = "Please grant Notification Access in Settings."
+        }
+
+        setContent {
+            MadeMeDanceTheme {
+                val song by currentSong.collectAsState()
+                val currentStatus by status.collectAsState()
+                MainScreen(
+                    currentSong = song,
+                    status = currentStatus
+                )
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        gyroscopeSensor?.also { gyro ->
-            sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_NORMAL)
-        }
+        startListening()
     }
 
     override fun onPause() {
         super.onPause()
+        stopListening()
+    }
+
+    private fun startListening() {
+        gyroscopeSensor?.also { gyro ->
+            sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME)
+        }
+    }
+
+    private fun stopListening() {
         sensorManager.unregisterListener(this)
     }
 
-    // ... (other lifecycle methods)
-
-    // Handle gyroscope events
     override fun onSensorChanged(event: SensorEvent?) {
-
-
         if (event?.sensor?.type == Sensor.TYPE_GYROSCOPE) {
             val values = event.values
-        if (rhythmDetector.detectRhythm(values) && currentSong != null) {
-            addToPlaylist(currentSong!!, "Made Me Dance")
-            val currentSong = getCurrentSong()
-
-            // Feedback (optional)
-            Toast.makeText(this, "Added to playlist: $currentSong", Toast.LENGTH_SHORT).show()
-        }
-        }
-    }
-
-    private fun addToPlaylist(currentSong: String, s: String) {
-
-    }
-
-    // ... (helper functions: getCurrentSong, addToPlaylist)
-    private fun getCurrentSong(): String? {
-        val packageManager = packageManager
-        val componentName = ComponentName("com.google.android.googlequicksearchbox", "com.google.android.apps.search.soundsearch.SoundSearchService")
-        if (packageManager.getComponentEnabledSetting(componentName) != PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
-            return null // Now Playing is not enabled
-        }
-
-        val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-        val projection = arrayOf(MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.ARTIST)
-        val selection = "${MediaStore.Audio.Media.IS_MUSIC} = 1"
-        val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
-
-        contentResolver.query(uri, projection, selection, null, sortOrder)?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val title = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE))
-                val artist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST))
-                return "$title - $artist"
-            }
-        }
-        return null
-    }
-
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) { /* Not used here */ }
-}
-
-
-
-// ... inside MainActivity class ...
-
-private var currentSong: String? = null
-private lateinit var nlServiceReceiver: BroadcastReceiver
-
-fun onResume() {
-    super.onResume()
-    // ... (gyroscope registration)
-
-    nlServiceReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == NLService.ACTION_UPDATE_CURRENT_SONG) {
-                currentSong = intent.getStringExtra(NLService.EXTRA_SONG_TITLE)
-                // ... (update UI or use in rhythm detection logic)
+            if (rhythmDetector.detectRhythm(values)) {
+                val song = _currentSong.value
+                if (song != "No song detected") {
+                    _status.value = "Dance detected! '$song' would be added to 'Made Me Dance'."
+                } else {
+                    _status.value = "Dance detected! But no song is playing."
+                }
             }
         }
     }
 
-    registerReceiver(nlServiceReceiver, IntentFilter(NLService.ACTION_UPDATE_CURRENT_SONG))
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) { /* Not used */ }
+
+    private fun isNotificationServiceEnabled(): Boolean {
+        val enabledListeners = android.provider.Settings.Secure.getString(contentResolver, "enabled_notification_listeners")
+        return enabledListeners?.contains(packageName) == true
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(nlServiceReceiver)
+        stopListening()
+    }
 }
-
-override fun onPause() {
-    super.onPause()
-    // ... (unregister gyroscope)
-    unregisterReceiver(nlServiceReceiver)
-}
-
-fun unregisterReceiver(nlServiceReceiver: BroadcastReceiver) {
-
-}
-
-// ... inside onSensorChanged ...
-
-
-// ... rest of MainActivity class ...
-

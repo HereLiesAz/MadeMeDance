@@ -14,9 +14,7 @@ class RhythmDetector {
     private var previousTimestamp: Long = 0
 
     fun detectRhythm(gyroValues: FloatArray): Boolean {
-        val timestamp = System.currentTimeMillis()
-        val deltaTime = (timestamp - previousTimestamp) / 1000f // Time in seconds
-        previousTimestamp = timestamp
+        previousTimestamp = System.currentTimeMillis()
 
         // Add to queue and maintain window size
         dataQueue.addLast(gyroValues)
@@ -55,10 +53,4 @@ class RhythmDetector {
         return false
     }
 
-    // Helper function (from previous response)
-    private fun Iterable<Float>.standardDeviation(): Float {
-        val mean = this.average()
-        val sumOfSquaredDeviations = this.sumOf { (it - mean) * (it - mean) }
-        return kotlin.math.sqrt(sumOfSquaredDeviations / this.count().toFloat())
-    }
 }
