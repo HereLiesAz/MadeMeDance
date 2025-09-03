@@ -24,11 +24,19 @@ fun MainScreen(
     movementStatus: String,
     audioStatus: String,
     systemStatus: String,
-    onPermissionClick: () -> Unit
+    onPermissionClick: () -> Unit,
+    onClipListClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Made Me Dance") })
+            TopAppBar(
+                title = { Text("Made Me Dance") },
+                actions = {
+                    Button(onClick = onClipListClick) {
+                        Text("View Clips")
+                    }
+                }
+            )
         }
     ) { paddingValues ->
         Column(

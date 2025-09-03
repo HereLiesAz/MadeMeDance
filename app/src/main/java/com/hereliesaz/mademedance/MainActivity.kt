@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.navigation.compose.composable
 import com.hereliesaz.mademedance.ui.MainScreen
 import com.hereliesaz.mademedance.ui.theme.MadeMeDanceTheme
 import kotlinx.coroutines.MainScope
@@ -61,12 +62,21 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                 val movement by movementStatus.collectAsState()
                 val audio by audioStatus.collectAsState()
                 val system by systemStatus.collectAsState()
-                MainScreen(
-                    movementStatus = movement,
-                    audioStatus = audio,
-                    systemStatus = system,
-                    onPermissionClick = { requestPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO) }
-                )
+                val navController = androidx.navigation.compose.rememberNavController()
+                androidx.navigation.compose.NavHost(navController = navController, startDestination = "main") {
+                    composable("main") {
+                        MainScreen(
+                            movementStatus = movement,
+                            audioStatus = audio,
+                            systemStatus = system,
+                            onPermissionClick = { requestPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO) },
+                            onClipListClick = { navController.navigate("clip_list") }
+                        )
+                    }
+                    composable("clip_list") {
+                        com.hereliesaz.mademedance.ui.ClipListScreen()
+                    }
+                }
             }
         }
     }
@@ -141,7 +151,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     private fun saveAudioSnippet() {
         try {
             val timestamp = System.currentTimeMillis()
-            val file = File(getExternalFilesDir(null), "MadeMeDance_snippet_$timestamp.wav")
+            val file = File(getExternalFilesDir(null), "MadeMeDance_snippet_$timestamp.mmd")
             audioBpmDetector.saveSnippet(file)
             _systemStatus.value = "Snippet saved to ${file.name}"
         } catch (e: IOException) {
