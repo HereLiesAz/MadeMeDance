@@ -6,7 +6,9 @@
       "Bash(unzip:*)",
       "Bash(./gradlew testDebugUnitTest:*)",
       "Bash(gh api:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(./gradlew clean:*)",
+      "Bash(./gradlew assembleRelease:*)"
     ]
   }
 }
