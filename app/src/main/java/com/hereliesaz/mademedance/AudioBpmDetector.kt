@@ -13,19 +13,20 @@ import org.apache.commons.math3.transform.TransformType
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.util.LinkedList
 
 class AudioBpmDetector {
 
     private val sampleRate = 44100
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
     private val audioFormat = AudioFormat.ENCODING_PCM_16BIT
+    private val fftSize = 1024 // Must be power of 2 for FFT
     private var bufferSize = 0
     private var audioRecord: AudioRecord? = null
 
     @SuppressLint("MissingPermission")
     fun start() {
         bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
+            .coerceAtLeast(fftSize * 2) // Ensure buffer is at least fftSize samples (16-bit = 2 bytes each)
         audioRecord = AudioRecord(
             MediaRecorder.AudioSource.MIC,
             sampleRate,
@@ -37,11 +38,16 @@ class AudioBpmDetector {
     }
 
     private val energyHistory = mutableListOf<Double>()
-    private val historySize = 43 // Approx 1 second of history for 44100/1024 buffer
+    private val historySize = 43 // Approx 1 second of history at 44100/1024 rate
     private val beatTimestamps = mutableListOf<Long>()
     private val beatThresholdFactor = 1.5
-    private val rollingAudioData = LinkedList<ShortArray>()
+
+    // Pre-allocated ring buffer: 15 seconds of mono 16-bit audio
     private val rollingBufferSizeSeconds = 15
+    private val ringBufferCapacity = sampleRate * rollingBufferSizeSeconds
+    private val ringBuffer = ShortArray(ringBufferCapacity)
+    private var ringWritePos = 0
+    private var ringBufferFilled = false
 
     suspend fun processAudio(): Float? {
         if (audioRecord == null || bufferSize == 0) return null
@@ -53,21 +59,27 @@ class AudioBpmDetector {
             return null
         }
 
-        // Manage rolling buffer for snippet saving
-        rollingAudioData.add(buffer.clone())
-        val maxRollingBuffers = (sampleRate * rollingBufferSizeSeconds) / bufferSize
-        if (rollingAudioData.size > maxRollingBuffers) {
-            rollingAudioData.removeFirst()
+        // Write to ring buffer (no allocations)
+        for (i in 0 until readResult) {
+            ringBuffer[ringWritePos] = buffer[i]
+            ringWritePos++
+            if (ringWritePos >= ringBufferCapacity) {
+                ringWritePos = 0
+                ringBufferFilled = true
+            }
         }
 
         return withContext(Dispatchers.Default) {
+            // Use only first fftSize samples for FFT (guaranteed power of 2)
+            val fftData = Array(fftSize) { i ->
+                if (i < readResult) Complex(buffer[i].toDouble()) else Complex.ZERO
+            }
             val transformer = FastFourierTransformer(DftNormalization.STANDARD)
-            val complexData = buffer.map { Complex(it.toDouble()) }.toTypedArray()
-            val fftResults = transformer.transform(complexData, TransformType.FORWARD)
+            val fftResults = transformer.transform(fftData, TransformType.FORWARD)
 
-            // Calculate energy in a bass frequency range (e.g., 60-250 Hz)
-            val bassStartIndex = (60.0 * bufferSize / sampleRate).toInt()
-            val bassEndIndex = (250.0 * bufferSize / sampleRate).toInt()
+            // Calculate energy in bass frequency range (60-250 Hz)
+            val bassStartIndex = (60.0 * fftSize / sampleRate).toInt()
+            val bassEndIndex = (250.0 * fftSize / sampleRate).toInt()
             var currentEnergy = 0.0
             for (i in bassStartIndex..bassEndIndex) {
                 currentEnergy += fftResults[i].abs()
@@ -89,7 +101,7 @@ class AudioBpmDetector {
             if (isBeat) {
                 val now = System.currentTimeMillis()
                 beatTimestamps.add(now)
-                if (beatTimestamps.size > 10) { // Keep last 10 beats
+                if (beatTimestamps.size > 10) {
                     beatTimestamps.removeAt(0)
                 }
 
@@ -113,7 +125,16 @@ class AudioBpmDetector {
 
     @Throws(IOException::class)
     fun saveSnippet(file: File) {
-        val data = rollingAudioData.flatMap { it.asIterable() }.toShortArray()
+        val data: ShortArray = if (ringBufferFilled) {
+            // Buffer has wrapped: read from writePos to end, then start to writePos
+            val result = ShortArray(ringBufferCapacity)
+            System.arraycopy(ringBuffer, ringWritePos, result, 0, ringBufferCapacity - ringWritePos)
+            System.arraycopy(ringBuffer, 0, result, ringBufferCapacity - ringWritePos, ringWritePos)
+            result
+        } else {
+            // Buffer hasn't wrapped yet: read from 0 to writePos
+            ringBuffer.copyOfRange(0, ringWritePos)
+        }
         val outputStream = FileOutputStream(file)
         writeWavHeader(outputStream, data.size * 2)
         outputStream.write(shortArrayToByteArray(data))
@@ -121,12 +142,12 @@ class AudioBpmDetector {
     }
 
     private fun shortArrayToByteArray(shortArray: ShortArray): ByteArray {
-        val byte_data = ByteArray(shortArray.size * 2)
+        val byteData = ByteArray(shortArray.size * 2)
         for (i in shortArray.indices) {
-            byte_data[i * 2] = (shortArray[i].toInt() and 0x00FF).toByte()
-            byte_data[i * 2 + 1] = (shortArray[i].toInt() shr 8).toByte()
+            byteData[i * 2] = (shortArray[i].toInt() and 0x00FF).toByte()
+            byteData[i * 2 + 1] = (shortArray[i].toInt() shr 8).toByte()
         }
-        return byte_data
+        return byteData
     }
 
     @Throws(IOException::class)
