@@ -47,7 +47,9 @@ fun MainScreen(
     hasAudioPermission: Boolean,
     movementBpm: Float?,
     audioBpm: Float?,
+    isServiceRunning: Boolean,
     onPermissionClick: () -> Unit,
+    onToggleService: () -> Unit,
     onClipListClick: () -> Unit
 ) {
     Scaffold(
@@ -105,17 +107,15 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Permission button or listening indicator
+            // Permission button or service toggle
             if (!hasAudioPermission) {
                 Button(onClick = onPermissionClick) {
                     Text("Enable Microphone")
                 }
             } else {
-                Text(
-                    text = "Listening for music...",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Button(onClick = onToggleService) {
+                    Text(if (isServiceRunning) "Stop Listening" else "Start Listening")
+                }
             }
         }
     }

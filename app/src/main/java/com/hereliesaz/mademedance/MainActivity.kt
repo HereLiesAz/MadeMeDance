@@ -1,6 +1,7 @@
 package com.hereliesaz.mademedance
 
 import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,11 +21,18 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var viewModel: MainViewModel
 
-    private val requestPermissionLauncher =
+    private val requestAudioPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 viewModel.onPermissionGranted()
+                viewModel.startService()
             }
+        }
+
+    private val requestNotificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ ->
+            // Proceed regardless — notification permission isn't strictly required
+            requestAudioIfNeeded()
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +50,7 @@ class MainActivity : ComponentActivity() {
                 val hasPermission by vm.hasAudioPermission.collectAsState()
                 val movementBpm by vm.movementBpm.collectAsState()
                 val audioBpm by vm.audioBpm.collectAsState()
+                val isRunning by vm.isServiceRunning.collectAsState()
                 val navController = rememberNavController()
 
                 NavHost(navController = navController, startDestination = "main") {
@@ -53,8 +62,10 @@ class MainActivity : ComponentActivity() {
                             hasAudioPermission = hasPermission,
                             movementBpm = movementBpm,
                             audioBpm = audioBpm,
-                            onPermissionClick = {
-                                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                            isServiceRunning = isRunning,
+                            onPermissionClick = { requestPermissions() },
+                            onToggleService = {
+                                if (isRunning) vm.stopService() else requestPermissions()
                             },
                             onClipListClick = { navController.navigate("clip_list") }
                         )
@@ -74,18 +85,26 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         if (::viewModel.isInitialized) {
             viewModel.refreshPermissionState()
-            viewModel.startSensors()
-            if (viewModel.hasAudioPermission.value) {
-                viewModel.startAudioProcessing()
+            // Rebind to service if it's running but we lost the binding
+            if (viewModel.hasAudioPermission.value && !viewModel.isServiceRunning.value) {
+                viewModel.startService()
             }
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        if (::viewModel.isInitialized) {
-            viewModel.stopSensors()
-            viewModel.stopAudioProcessing()
+    private fun requestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            requestAudioIfNeeded()
+        }
+    }
+
+    private fun requestAudioIfNeeded() {
+        if (viewModel.hasAudioPermission.value) {
+            viewModel.startService()
+        } else {
+            requestAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         }
     }
 }
