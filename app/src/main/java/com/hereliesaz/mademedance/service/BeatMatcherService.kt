@@ -464,9 +464,9 @@ class BeatMatcherService : Service() {
         )
         val identify = PendingIntent.getActivity(
             this, 101,
-            Intent(android.content.Intent.ACTION_WEB_SEARCH)
-                .putExtra(android.app.SearchManager.QUERY, "what is this song")
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            Intent(this, MainActivity::class.java)
+                .putExtra(MainActivity.EXTRA_IDENTIFY, true)
+                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 

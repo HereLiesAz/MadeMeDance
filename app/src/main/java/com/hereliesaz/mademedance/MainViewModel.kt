@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import com.hereliesaz.mademedance.data.ClipItem
 import com.hereliesaz.mademedance.data.ClipRepository
+import com.hereliesaz.mademedance.identify.SongIdentifier
 import com.hereliesaz.mademedance.service.BeatMatcherService
 import com.hereliesaz.mademedance.service.BeatMatcherState
 import com.hereliesaz.mademedance.settings.SettingsStore
@@ -33,6 +34,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _hasNotificationPermission = MutableStateFlow(false)
     val hasNotificationPermission: StateFlow<Boolean> = _hasNotificationPermission.asStateFlow()
 
+    private val _hasNowPlayingAccess = MutableStateFlow(false)
+    val hasNowPlayingAccess: StateFlow<Boolean> = _hasNowPlayingAccess.asStateFlow()
+
     val clipRepository = ClipRepository(application.getExternalFilesDir(null))
 
     init {
@@ -51,6 +55,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     ctx, Manifest.permission.POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED
             } else true
+        _hasNowPlayingAccess.value = SongIdentifier.hasNotificationAccess(ctx)
     }
 
     fun startService() {

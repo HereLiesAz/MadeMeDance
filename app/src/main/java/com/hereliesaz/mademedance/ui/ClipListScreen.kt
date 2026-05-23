@@ -1,7 +1,5 @@
 package com.hereliesaz.mademedance.ui
 
-import android.app.SearchManager
-import android.content.Intent
 import android.media.MediaPlayer
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -42,6 +40,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.hereliesaz.mademedance.data.ClipItem
 import com.hereliesaz.mademedance.data.ClipRepository
+import com.hereliesaz.mademedance.identify.IdentifyResult
+import com.hereliesaz.mademedance.identify.SongIdentifier
 import com.hereliesaz.mademedance.service.BeatMatcherState
 import kotlinx.coroutines.flow.collectLatest
 
@@ -69,6 +69,18 @@ fun ClipListScreen(
 
     var showDialog by remember { mutableStateOf(false) }
     var selectedClip by remember { mutableStateOf<ClipItem?>(null) }
+    var nowPlaying by remember { mutableStateOf<IdentifyResult.NowPlaying?>(null) }
+
+    nowPlaying?.let { np ->
+        NowPlayingDialog(
+            nowPlaying = np,
+            onSearch = {
+                SongIdentifier.searchForKnownSong(context, np.artist, np.title)
+                nowPlaying = null
+            },
+            onDismiss = { nowPlaying = null }
+        )
+    }
 
     val mediaPlayer = remember { MediaPlayer() }
     DisposableEffect(Unit) {
@@ -102,11 +114,8 @@ fun ClipListScreen(
                         Text("Review (play clip)")
                     }
                     TextButton(onClick = {
-                        Toast.makeText(context, "Tap the microphone and hum the tune!", Toast.LENGTH_LONG).show()
-                        val intent = Intent(Intent.ACTION_WEB_SEARCH).apply {
-                            putExtra(SearchManager.QUERY, "what is this song")
-                        }
-                        context.startActivity(intent)
+                        showDialog = false
+                        runIdentify(context) { nowPlaying = it }
                     }) {
                         Text("Identify song")
                     }

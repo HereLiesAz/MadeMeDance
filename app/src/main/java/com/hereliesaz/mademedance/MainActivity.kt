@@ -18,18 +18,28 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.hereliesaz.mademedance.identify.IdentifyResult
+import com.hereliesaz.mademedance.identify.SongIdentifier
 import com.hereliesaz.mademedance.ui.ClipListScreen
 import com.hereliesaz.mademedance.ui.MainScreen
+import com.hereliesaz.mademedance.ui.NowPlayingDialog
+import com.hereliesaz.mademedance.ui.runIdentify
 import com.hereliesaz.mademedance.ui.theme.MadeMeDanceTheme
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class MainActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_OPEN_CLIPS = "open_clips"
+        const val EXTRA_IDENTIFY = "identify"
     }
 
     private lateinit var viewModel: MainViewModel
     private var pendingStartAfterPermissions = false
+
+    // Bumped each time an "Identify" intent arrives (cold start or onNewIntent),
+    // so the Compose tree can run the identification chain exactly once per tap.
+    private val identifyTrigger = MutableStateFlow(0)
 
     private val requestAudioPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -52,6 +62,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val openClipsOnLaunch = intent?.getBooleanExtra(EXTRA_OPEN_CLIPS, false) == true
+        if (intent?.getBooleanExtra(EXTRA_IDENTIFY, false) == true) {
+            identifyTrigger.value++
+        }
 
         setContent {
             MadeMeDanceTheme {
@@ -68,6 +81,7 @@ class MainActivity : ComponentActivity() {
                 val sensitivity by vm.sensitivity.collectAsState()
                 val batteryDrain by vm.batteryDrainPerHour.collectAsState()
                 val powerSaving by vm.powerSaving.collectAsState()
+                val hasNowPlayingAccess by vm.hasNowPlayingAccess.collectAsState()
                 val navController = rememberNavController()
 
                 var navigatedToClips by remember { mutableStateOf(false) }
@@ -76,6 +90,24 @@ class MainActivity : ComponentActivity() {
                         navController.navigate("clip_list")
                         navigatedToClips = true
                     }
+                }
+
+                var nowPlaying by remember { mutableStateOf<IdentifyResult.NowPlaying?>(null) }
+                val identify by identifyTrigger.collectAsState()
+                LaunchedEffect(identify) {
+                    if (identify > 0) {
+                        runIdentify(this@MainActivity) { nowPlaying = it }
+                    }
+                }
+                nowPlaying?.let { np ->
+                    NowPlayingDialog(
+                        nowPlaying = np,
+                        onSearch = {
+                            SongIdentifier.searchForKnownSong(this@MainActivity, np.artist, np.title)
+                            nowPlaying = null
+                        },
+                        onDismiss = { nowPlaying = null }
+                    )
                 }
 
                 NavHost(navController = navController, startDestination = "main") {
@@ -91,7 +123,9 @@ class MainActivity : ComponentActivity() {
                             sensitivity = sensitivity,
                             batteryDrainPerHour = batteryDrain,
                             powerSaving = powerSaving,
+                            hasNowPlayingAccess = hasNowPlayingAccess,
                             onSensitivityChange = { vm.setSensitivity(it) },
+                            onEnableNowPlaying = { SongIdentifier.openNotificationAccessSettings(this@MainActivity) },
                             onStartClick = { requestPermissionsAndStart() },
                             onStopClick = { vm.stopService() },
                             onPermissionClick = { requestPermissionsAndStart() },
@@ -114,6 +148,9 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        if (intent.getBooleanExtra(EXTRA_IDENTIFY, false)) {
+            identifyTrigger.value++
+        }
     }
 
     override fun onResume() {

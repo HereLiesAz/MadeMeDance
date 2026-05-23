@@ -7,7 +7,17 @@ An Android app that identifies songs by matching your body's rhythm to the music
 1. The app detects your **movement BPM** via the accelerometer (so it works with the phone in your pocket)
 2. Simultaneously detects the **music BPM** via the microphone
 3. When both BPMs match (within 5 BPM tolerance), a 15-second audio snippet is saved
-4. You can review saved clips and identify songs via Google Search
+4. You can review saved clips and identify the song
+
+### Identifying the song
+
+Tapping **Identify** runs a free, no-API chain:
+
+1. If media is **playing on the device**, read the title/artist straight from the active media session (needs one-time *notification access*, offered via "Enable now-playing detection").
+2. Otherwise launch the best installed recognizer — **Google** (Sound Search) first, then Shazam / SoundHound / Musixmatch — which listens live.
+3. If none is installed, open a web search and prompt you to install one.
+
+(Recognizer apps listen to live audio — they can't ingest the saved clip, so they only help while the song is still playing. The saved clip remains the manual backstop.)
 
 It runs as a background **foreground service**, so you can pocket the phone and keep dancing — no need to keep the app open. The cheap accelerometer runs continuously, but the **microphone only switches on once dancing is detected** and switches off again a few seconds after you stop — saving battery and keeping the mic off while you're still.
 

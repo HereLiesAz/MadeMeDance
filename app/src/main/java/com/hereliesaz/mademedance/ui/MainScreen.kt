@@ -53,7 +53,9 @@ fun MainScreen(
     sensitivity: Float,
     batteryDrainPerHour: Float?,
     powerSaving: Boolean,
+    hasNowPlayingAccess: Boolean,
     onSensitivityChange: (Float) -> Unit,
+    onEnableNowPlaying: () -> Unit,
     onStartClick: () -> Unit,
     onStopClick: () -> Unit,
     onPermissionClick: () -> Unit,
@@ -109,6 +111,12 @@ fun MainScreen(
                 batteryDrainPerHour = batteryDrainPerHour,
                 onSensitivityChange = onSensitivityChange
             )
+
+            if (!hasNowPlayingAccess) {
+                TextButton(onClick = onEnableNowPlaying) {
+                    Text("Enable now-playing detection")
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
