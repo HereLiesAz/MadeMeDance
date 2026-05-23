@@ -91,8 +91,11 @@ object AcrCloudClient {
             when (val statusCode = status?.optInt("code", -1) ?: -1) {
                 0 -> {
                     val music = json.optJSONObject("metadata")?.optJSONArray("music")
-                    val first = if (music != null && music.length() > 0) music.getJSONObject(0) else null
-                        ?: return AcrOutcome.NoMatch
+                    val first = if (music != null && music.length() > 0) {
+                        music.getJSONObject(0)
+                    } else {
+                        return AcrOutcome.NoMatch
+                    }
                     val title = first.optString("title").takeIf { it.isNotBlank() }
                         ?: return AcrOutcome.NoMatch
                     val artist = first.optJSONArray("artists")

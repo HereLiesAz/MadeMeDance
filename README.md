@@ -11,13 +11,15 @@ An Android app that identifies songs by matching your body's rhythm to the music
 
 ### Identifying the song
 
-Tapping **Identify** runs a free, no-API chain:
+The app tries to know the song as early as possible, and gives you several ways to find it later — all free, no paid API:
 
-1. If media is **playing on the device**, read the title/artist straight from the active media session (needs one-time *notification access*, offered via "Enable now-playing detection").
-2. Otherwise launch the best installed recognizer — **Google** (Sound Search) first, then Shazam / SoundHound / Musixmatch — which listens live.
-3. If none is installed, open a web search and prompt you to install one.
+- **At match time:** if the music is playing **through the phone**, the song's title/artist is read from the active media session and stored with the clip automatically (needs one-time *notification access*, offered via "Enable now-playing detection").
+- **From a saved clip, later:**
+  - **Identify this clip** — uploads the clip to ACRCloud (your own free-tier key, entered in Settings, stored encrypted on-device) and recognizes it even after the song has stopped.
+  - **Play to a song finder** — loops the clip out the speaker and opens an installed recognizer (Google Sound Search / Shazam / SoundHound) to listen.
+  - **What's playing now** — the live chain: read the device's now-playing, else launch a recognizer, else web-search.
 
-(Recognizer apps listen to live audio — they can't ingest the saved clip, so they only help while the song is still playing. The saved clip remains the manual backstop.)
+Once a clip's song is known, it shows the title/artist in the list with a one-tap web search.
 
 It runs as a background **foreground service**, so you can pocket the phone and keep dancing — no need to keep the app open. The cheap accelerometer runs continuously, but the **microphone only switches on once dancing is detected** and switches off again a few seconds after you stop — saving battery and keeping the mic off while you're still.
 

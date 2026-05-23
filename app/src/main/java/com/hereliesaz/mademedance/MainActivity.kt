@@ -23,6 +23,7 @@ import com.hereliesaz.mademedance.identify.SongIdentifier
 import com.hereliesaz.mademedance.ui.ClipListScreen
 import com.hereliesaz.mademedance.ui.MainScreen
 import com.hereliesaz.mademedance.ui.NowPlayingDialog
+import com.hereliesaz.mademedance.ui.SettingsScreen
 import com.hereliesaz.mademedance.ui.runIdentify
 import com.hereliesaz.mademedance.ui.theme.MadeMeDanceTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -82,6 +83,11 @@ class MainActivity : ComponentActivity() {
                 val batteryDrain by vm.batteryDrainPerHour.collectAsState()
                 val powerSaving by vm.powerSaving.collectAsState()
                 val hasNowPlayingAccess by vm.hasNowPlayingAccess.collectAsState()
+                val acrConfigured by vm.acrConfigured.collectAsState()
+                val recognition by vm.recognition.collectAsState()
+                val acrHost by vm.acrHost.collectAsState()
+                val acrKey by vm.acrKey.collectAsState()
+                val acrSecret by vm.acrSecret.collectAsState()
                 val navController = rememberNavController()
 
                 var navigatedToClips by remember { mutableStateOf(false) }
@@ -129,15 +135,29 @@ class MainActivity : ComponentActivity() {
                             onStartClick = { requestPermissionsAndStart() },
                             onStopClick = { vm.stopService() },
                             onPermissionClick = { requestPermissionsAndStart() },
-                            onClipListClick = { navController.navigate("clip_list") }
+                            onClipListClick = { navController.navigate("clip_list") },
+                            onSettingsClick = { navController.navigate("settings") }
                         )
                     }
                     composable("clip_list") {
                         ClipListScreen(
                             clipRepository = vm.clipRepository,
+                            acrConfigured = acrConfigured,
+                            recognition = recognition,
                             onAccept = { vm.acceptClip() },
                             onReject = { vm.rejectClip(it) },
+                            onRecognize = { vm.recognizeClip(it) },
+                            onClearRecognition = { vm.clearRecognition() },
                             onBackClick = { navController.popBackStack() }
+                        )
+                    }
+                    composable("settings") {
+                        SettingsScreen(
+                            acrHost = acrHost,
+                            acrKey = acrKey,
+                            acrSecret = acrSecret,
+                            onSave = { h, k, s -> vm.setAcrCredentials(h, k, s) },
+                            onBack = { navController.popBackStack() }
                         )
                     }
                 }

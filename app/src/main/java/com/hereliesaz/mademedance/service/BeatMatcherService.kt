@@ -24,6 +24,9 @@ import com.hereliesaz.mademedance.AudioBpmDetector
 import com.hereliesaz.mademedance.MainActivity
 import com.hereliesaz.mademedance.R
 import com.hereliesaz.mademedance.RhythmDetector
+import com.hereliesaz.mademedance.data.writeClipMeta
+import com.hereliesaz.mademedance.identify.IdentifyResult
+import com.hereliesaz.mademedance.identify.SongIdentifier
 import com.hereliesaz.mademedance.sensor.MovementTracker
 import com.hereliesaz.mademedance.settings.SettingsStore
 import kotlinx.coroutines.CoroutineScope
@@ -291,7 +294,13 @@ class BeatMatcherService : Service() {
             BeatMatcherState.setMovementBpm(null)
             BeatMatcherState.setAudioBpm(null)
             if (savedFile != null) {
-                postMatchNotification()
+                // The music is live right now, so capture what's playing and
+                // remember it with the clip (works when it plays through the phone).
+                val nowPlaying = SongIdentifier.currentlyPlaying(this)
+                if (nowPlaying != null) {
+                    writeClipMeta(savedFile, nowPlaying.title, nowPlaying.artist)
+                }
+                postMatchNotification(nowPlaying)
                 BeatMatcherState.notifyClipsChanged()
             }
             updateForegroundNotification()
@@ -449,7 +458,7 @@ class BeatMatcherService : Service() {
             .build()
     }
 
-    private fun postMatchNotification() {
+    private fun postMatchNotification(nowPlaying: IdentifyResult.NowPlaying?) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
@@ -462,25 +471,32 @@ class BeatMatcherService : Service() {
                 .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-        val identify = PendingIntent.getActivity(
-            this, 101,
-            Intent(this, MainActivity::class.java)
-                .putExtra(MainActivity.EXTRA_IDENTIFY, true)
-                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
 
-        val notification = NotificationCompat.Builder(this, CHANNEL_MATCHES)
+        val builder = NotificationCompat.Builder(this, CHANNEL_MATCHES)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("You're dancing to something!")
-            .setContentText("15 s snippet saved — tap Identify to find the song.")
             .setContentIntent(openClips)
             .setAutoCancel(true)
-            .addAction(0, "Identify", identify)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .build()
+
+        if (nowPlaying != null) {
+            // We already know the song — no need to offer identification.
+            val song = listOfNotNull(nowPlaying.artist, nowPlaying.title).joinToString(" — ")
+            builder.setContentTitle("You're dancing to $song")
+                .setContentText("Saved — tap to view your clips.")
+        } else {
+            val identify = PendingIntent.getActivity(
+                this, 101,
+                Intent(this, MainActivity::class.java)
+                    .putExtra(MainActivity.EXTRA_IDENTIFY, true)
+                    .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            builder.setContentTitle("You're dancing to something!")
+                .setContentText("15 s snippet saved — tap Identify to find the song.")
+                .addAction(0, "Identify", identify)
+        }
 
         NotificationManagerCompat.from(this)
-            .notify(NOTIFICATION_ID_MATCH_BASE + (matchCounter++), notification)
+            .notify(NOTIFICATION_ID_MATCH_BASE + (matchCounter++), builder.build())
     }
 }

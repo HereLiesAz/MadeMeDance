@@ -59,7 +59,8 @@ fun MainScreen(
     onStartClick: () -> Unit,
     onStopClick: () -> Unit,
     onPermissionClick: () -> Unit,
-    onClipListClick: () -> Unit
+    onClipListClick: () -> Unit,
+    onSettingsClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -68,6 +69,9 @@ fun MainScreen(
                 actions = {
                     TextButton(onClick = onClipListClick) {
                         Text("Clips")
+                    }
+                    TextButton(onClick = onSettingsClick) {
+                        Text("Settings")
                     }
                 }
             )
