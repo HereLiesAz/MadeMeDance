@@ -59,7 +59,7 @@ fun ClipListScreen(
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             BeatMatcherState.clipsChanged.collectLatest {
                 clips.clear()
-                clips.addAll(clipRepository.getClips())
+                clipRepository?.getClips()?.let { clips.addAll(it) }
             }
         }
     }
