@@ -9,7 +9,7 @@ An Android app that identifies songs by matching your body's rhythm to the music
 3. When both BPMs match (within 5 BPM tolerance), a 15-second audio snippet is saved
 4. You can review saved clips and identify songs via Google Search
 
-It runs as a background **foreground service**, so you can pocket the phone and keep dancing — no need to keep the app open.
+It runs as a background **foreground service**, so you can pocket the phone and keep dancing — no need to keep the app open. The cheap accelerometer runs continuously, but the **microphone only switches on once dancing is detected** and switches off again a few seconds after you stop — saving battery and keeping the mic off while you're still.
 
 ### Tuning sensitivity
 

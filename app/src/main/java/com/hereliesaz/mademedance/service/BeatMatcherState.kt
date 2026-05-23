@@ -33,8 +33,12 @@ object BeatMatcherState {
     private val _powerSaving = MutableStateFlow(false)
     val powerSaving: StateFlow<Boolean> = _powerSaving.asStateFlow()
 
+    private val _micActive = MutableStateFlow(false)
+    val micActive: StateFlow<Boolean> = _micActive.asStateFlow()
+
     internal fun setBatteryDrainPerHour(drain: Float?) { _batteryDrainPerHour.value = drain }
     internal fun setPowerSaving(saving: Boolean) { _powerSaving.value = saving }
+    internal fun setMicActive(active: Boolean) { _micActive.value = active }
 
     internal fun setRunning(running: Boolean) { _isRunning.value = running }
     internal fun setMovementBpm(bpm: Float?) {

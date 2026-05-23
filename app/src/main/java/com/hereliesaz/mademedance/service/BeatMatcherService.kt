@@ -53,6 +53,12 @@ class BeatMatcherService : Service() {
         private const val BPM_MATCH_THRESHOLD = 5.0
         private const val NOTIFICATION_UPDATE_INTERVAL_MS = 1000L
 
+        // The accelerometer (cheap) runs continuously; the mic (expensive,
+        // privacy-sensitive) only wakes while you're dancing and shuts off
+        // after this long without a detected movement BPM.
+        private const val MIC_IDLE_TIMEOUT_MS = 8_000L
+        private const val MIC_IDLE_CHECK_INTERVAL_MS = 2_000L
+
         // Battery-driven power saving. Drain below DRAIN_OK_PER_HOUR is fine;
         // at/above DRAIN_HIGH_PER_HOUR we apply the full backoff. Values are
         // %/hour and empirical.
@@ -84,11 +90,15 @@ class BeatMatcherService : Service() {
     private var notificationJob: Job? = null
     private var batteryJob: Job? = null
     private var sensitivityJob: Job? = null
+    private var micWatchdogJob: Job? = null
 
     private lateinit var audioBpmDetector: AudioBpmDetector
     private lateinit var movementTracker: MovementTracker
     private var wakeLock: PowerManager.WakeLock? = null
     private var matchCounter = 0
+
+    @Volatile
+    private var lastDanceMs = 0L
 
     private val batterySamples = ArrayDeque<Pair<Long, Float>>()
 
@@ -138,7 +148,7 @@ class BeatMatcherService : Service() {
         acquireWakeLock()
 
         BeatMatcherState.setRunning(true)
-        BeatMatcherState.setSystemStatus("Listening...")
+        BeatMatcherState.setSystemStatus("Starting…")
 
         val hasMic = ContextCompat.checkSelfPermission(
             this, Manifest.permission.RECORD_AUDIO
@@ -153,28 +163,31 @@ class BeatMatcherService : Service() {
 
         if (movementTracker.isAvailable) {
             movementTracker.start()
+            BeatMatcherState.setSystemStatus("Waiting for you to dance…")
             sensorJob = scope.launch {
                 movementTracker.bpm.collect { bpm ->
                     if (bpm != null) {
                         BeatMatcherState.setMovementBpm(bpm)
+                        lastDanceMs = System.currentTimeMillis()
+                        ensureAudioRunning()
                         checkForMatch()
+                    }
+                }
+            }
+            // Shut the mic back off once the dancing stops.
+            micWatchdogJob = scope.launch {
+                while (isActive) {
+                    delay(MIC_IDLE_CHECK_INTERVAL_MS)
+                    if (audioJob?.isActive == true &&
+                        System.currentTimeMillis() - lastDanceMs > MIC_IDLE_TIMEOUT_MS
+                    ) {
+                        stopAudio()
+                        BeatMatcherState.setSystemStatus("Waiting for you to dance…")
                     }
                 }
             }
         } else {
             BeatMatcherState.setSystemStatus("No motion sensor on this device.")
-        }
-
-        audioJob = scope.launch {
-            audioBpmDetector.start()
-            while (isActive) {
-                val bpm = audioBpmDetector.processAudio()
-                if (bpm != null) {
-                    BeatMatcherState.setAudioBpm(bpm)
-                    checkForMatch()
-                }
-                delay(audioIntervalMs)
-            }
         }
 
         notificationJob = scope.launch {
@@ -196,6 +209,32 @@ class BeatMatcherService : Service() {
                 delay(BATTERY_SAMPLE_INTERVAL_MS)
             }
         }
+    }
+
+    @Synchronized
+    private fun ensureAudioRunning() {
+        if (audioJob?.isActive == true) return
+        BeatMatcherState.setMicActive(true)
+        BeatMatcherState.setSystemStatus("Dancing detected — listening for the song…")
+        audioJob = scope.launch {
+            audioBpmDetector.start()
+            while (isActive) {
+                val bpm = audioBpmDetector.processAudio()
+                if (bpm != null) {
+                    BeatMatcherState.setAudioBpm(bpm)
+                    checkForMatch()
+                }
+                delay(audioIntervalMs)
+            }
+        }
+    }
+
+    @Synchronized
+    private fun stopAudio() {
+        audioJob?.cancel(); audioJob = null
+        try { audioBpmDetector.stop() } catch (_: Exception) {}
+        BeatMatcherState.setAudioBpm(null)
+        BeatMatcherState.setMicActive(false)
     }
 
     /**
@@ -282,19 +321,18 @@ class BeatMatcherService : Service() {
     }
 
     private fun stopWork() {
-        audioJob?.cancel(); audioJob = null
         sensorJob?.cancel(); sensorJob = null
+        micWatchdogJob?.cancel(); micWatchdogJob = null
         notificationJob?.cancel(); notificationJob = null
         batteryJob?.cancel(); batteryJob = null
         sensitivityJob?.cancel(); sensitivityJob = null
-        try { audioBpmDetector.stop() } catch (_: Exception) {}
+        stopAudio()
         try { movementTracker.stop() } catch (_: Exception) {}
         releaseWakeLock()
         batterySamples.clear()
         batteryPenalty = 0f
         BeatMatcherState.setRunning(false)
         BeatMatcherState.setMovementBpm(null)
-        BeatMatcherState.setAudioBpm(null)
         BeatMatcherState.setBatteryDrainPerHour(null)
         BeatMatcherState.setPowerSaving(false)
         BeatMatcherState.setSystemStatus("Service stopped.")
@@ -383,7 +421,12 @@ class BeatMatcherService : Service() {
         val audio = BeatMatcherState.audioBpm.value
         val drain = BeatMatcherState.batteryDrainPerHour.value
         val powerSaving = BeatMatcherState.powerSaving.value
-        val title = if (powerSaving) "MadeMeDance (power-saving)" else "MadeMeDance is listening"
+        val base = if (BeatMatcherState.micActive.value) {
+            "Listening for the song"
+        } else {
+            "Watching for dancing"
+        }
+        val title = if (powerSaving) "$base (power-saving)" else base
         val body = buildString {
             append(movement?.let { "You: ${"%.0f".format(it)} BPM" } ?: "You: -- BPM")
             append("   ")
