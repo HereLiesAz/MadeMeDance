@@ -47,7 +47,7 @@ import kotlinx.coroutines.flow.collectLatest
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClipListScreen(
-    clipRepository: ClipRepository,
+    clipRepository: ClipRepository?,
     onBackClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -96,7 +96,7 @@ fun ClipListScreen(
                 Row {
                     TextButton(onClick = {
                         showDialog = false
-                        if (clipRepository.deleteClip(clip.name)) {
+                        if (clipRepository?.deleteClip(clip.name) == true) {
                             clips.remove(clip)
                         }
                     }) {
@@ -104,7 +104,7 @@ fun ClipListScreen(
                     }
                     TextButton(onClick = {
                         showDialog = false
-                        val file = clipRepository.getClipFile(clip.name)
+                        val file = clipRepository?.getClipFile(clip.name)
                         if (file != null) {
                             try {
                                 mediaPlayer.reset()

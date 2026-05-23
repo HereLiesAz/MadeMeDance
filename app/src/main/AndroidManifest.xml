@@ -24,6 +24,11 @@
         android:theme="@style/Theme.MadeMeDance"
         tools:targetApi="31">
 
+        <service
+            android:name=".service.BpmMatchingService"
+            android:foregroundServiceType="microphone"
+            android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">

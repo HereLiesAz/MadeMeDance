@@ -52,6 +52,7 @@ fun MainScreen(
     onStartClick: () -> Unit,
     onStopClick: () -> Unit,
     onPermissionClick: () -> Unit,
+    onToggleService: () -> Unit,
     onClipListClick: () -> Unit
 ) {
     Scaffold(
