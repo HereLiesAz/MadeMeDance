@@ -47,12 +47,6 @@ class MainActivity : ComponentActivity() {
             pendingStartAfterPermissions = false
         }
 
-    private val requestNotificationPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ ->
-            // Proceed regardless — notification permission isn't strictly required
-            requestAudioIfNeeded()
-        }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -71,7 +65,6 @@ class MainActivity : ComponentActivity() {
                 val isRunning by vm.isServiceRunning.collectAsState()
                 val movementBpm by vm.movementBpm.collectAsState()
                 val audioBpm by vm.audioBpm.collectAsState()
-                val isRunning by vm.isServiceRunning.collectAsState()
                 val navController = rememberNavController()
 
                 var navigatedToClips by remember { mutableStateOf(false) }
