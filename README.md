@@ -4,7 +4,7 @@ An Android app that identifies songs by matching your body's rhythm to the music
 
 ## How It Works
 
-1. The app detects your **movement BPM** via the gyroscope sensor
+1. The app detects your **movement BPM** via the accelerometer (so it works with the phone in your pocket)
 2. Simultaneously detects the **music BPM** via the microphone
 3. When both BPMs match (within 5 BPM tolerance), a 15-second audio snippet is saved
 4. You can review saved clips and identify songs via Google Search
@@ -16,11 +16,11 @@ mademedance/
 ├── MainActivity.kt              # Thin shell: permissions, lifecycle, Compose UI
 ├── MainViewModel.kt             # Business logic, state management, coordination
 ├── AudioBpmDetector.kt          # FFT-based beat detection on microphone audio
-├── RhythmDetector.kt            # FFT-based movement BPM from gyroscope
+├── RhythmDetector.kt            # FFT-based movement BPM from accelerometer
 ├── data/
 │   └── ClipRepository.kt       # File-based clip management (list, delete)
 ├── sensor/
-│   └── MovementTracker.kt      # Gyroscope sensor wrapper, exposes BPM StateFlow
+│   └── MovementTracker.kt      # Accelerometer sensor wrapper, exposes BPM StateFlow
 └── ui/
     ├── MainScreen.kt            # Pulse ring animation, match proximity bar
     ├── ClipListScreen.kt        # Clip list with playback, deletion, identification

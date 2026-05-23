@@ -2,13 +2,7 @@ package com.hereliesaz.mademedance
 
 import android.Manifest
 import android.app.Application
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.hardware.Sensor
-import android.hardware.SensorManager
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import com.hereliesaz.mademedance.data.ClipRepository
@@ -34,11 +28,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val hasNotificationPermission: StateFlow<Boolean> = _hasNotificationPermission.asStateFlow()
 
     val clipRepository = ClipRepository(application.getExternalFilesDir(null))
-
-    val hasGyroscope: Boolean = run {
-        val sm = application.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null
-    }
 
     init {
         refreshPermissionState()

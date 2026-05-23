@@ -12,16 +12,16 @@ import kotlinx.coroutines.flow.asStateFlow
 class MovementTracker(private val sensorManager: SensorManager) : SensorEventListener {
 
     private val rhythmDetector = RhythmDetector()
-    private val gyroscopeSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+    private val accelerometerSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
-    val isAvailable: Boolean = gyroscopeSensor != null
+    val isAvailable: Boolean = accelerometerSensor != null
 
     private val _bpm = MutableStateFlow<Float?>(null)
     val bpm: StateFlow<Float?> = _bpm.asStateFlow()
 
     fun start() {
-        gyroscopeSensor?.also { gyro ->
-            sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME)
+        accelerometerSensor?.also { sensor ->
+            sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_GAME)
         }
     }
 
@@ -30,7 +30,7 @@ class MovementTracker(private val sensorManager: SensorManager) : SensorEventLis
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
-        if (event?.sensor?.type == Sensor.TYPE_GYROSCOPE) {
+        if (event?.sensor?.type == Sensor.TYPE_ACCELEROMETER) {
             _bpm.value = rhythmDetector.getMovementBpm(event)
         }
     }

@@ -133,7 +133,7 @@ class BeatMatcherService : Service() {
                 }
             }
         } else {
-            BeatMatcherState.setSystemStatus("No gyroscope sensor on this device.")
+            BeatMatcherState.setSystemStatus("No motion sensor on this device.")
         }
 
         audioJob = scope.launch {
