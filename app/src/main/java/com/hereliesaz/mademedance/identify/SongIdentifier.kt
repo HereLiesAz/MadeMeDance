@@ -41,6 +41,12 @@ object SongIdentifier {
         return IdentifyResult.NoRecognizer
     }
 
+    /** Side-effect-free read of the device's currently-playing media, if any. */
+    fun currentlyPlaying(context: Context): IdentifyResult.NowPlaying? = readNowPlaying(context)
+
+    /** Launch the most-preferred installed recognizer; returns its label or null. */
+    fun launchAnyRecognizer(context: Context): String? = launchFirstRecognizer(context)
+
     fun hasNotificationAccess(context: Context): Boolean {
         val enabled = Settings.Secure.getString(
             context.contentResolver, "enabled_notification_listeners"
