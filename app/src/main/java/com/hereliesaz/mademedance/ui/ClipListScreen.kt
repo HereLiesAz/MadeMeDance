@@ -41,6 +41,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.hereliesaz.mademedance.data.ClipItem
 import com.hereliesaz.mademedance.data.ClipRepository
+import com.hereliesaz.mademedance.service.BeatMatcherState
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,11 +54,13 @@ fun ClipListScreen(
     val clips = remember { mutableStateListOf<ClipItem>() }
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Refresh clip list whenever this screen becomes visible
+    // Refresh clip list whenever this screen becomes visible or the service signals a new clip
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            clips.clear()
-            clips.addAll(clipRepository.getClips())
+            BeatMatcherState.clipsChanged.collectLatest {
+                clips.clear()
+                clips.addAll(clipRepository.getClips())
+            }
         }
     }
 

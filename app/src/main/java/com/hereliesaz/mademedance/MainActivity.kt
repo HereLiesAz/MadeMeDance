@@ -1,13 +1,19 @@
 package com.hereliesaz.mademedance
 
 import android.Manifest
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -18,18 +24,34 @@ import com.hereliesaz.mademedance.ui.theme.MadeMeDanceTheme
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var viewModel: MainViewModel
+    companion object {
+        const val EXTRA_OPEN_CLIPS = "open_clips"
+    }
 
-    private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            if (isGranted) {
-                viewModel.onPermissionGranted()
+    private lateinit var viewModel: MainViewModel
+    private var pendingStartAfterPermissions = false
+
+    private val requestAudioPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            viewModel.refreshPermissionState()
+            if (granted) maybeRequestNotificationPermission()
+            else pendingStartAfterPermissions = false
+        }
+
+    private val requestNotificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ ->
+            viewModel.refreshPermissionState()
+            if (pendingStartAfterPermissions && viewModel.hasAudioPermission.value) {
+                viewModel.startService()
             }
+            pendingStartAfterPermissions = false
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val openClipsOnLaunch = intent?.getBooleanExtra(EXTRA_OPEN_CLIPS, false) == true
 
         setContent {
             MadeMeDanceTheme {
@@ -40,9 +62,18 @@ class MainActivity : ComponentActivity() {
                 val audio by vm.audioStatus.collectAsState()
                 val system by vm.systemStatus.collectAsState()
                 val hasPermission by vm.hasAudioPermission.collectAsState()
+                val isRunning by vm.isServiceRunning.collectAsState()
                 val movementBpm by vm.movementBpm.collectAsState()
                 val audioBpm by vm.audioBpm.collectAsState()
                 val navController = rememberNavController()
+
+                var navigatedToClips by remember { mutableStateOf(false) }
+                LaunchedEffect(openClipsOnLaunch) {
+                    if (openClipsOnLaunch && !navigatedToClips) {
+                        navController.navigate("clip_list")
+                        navigatedToClips = true
+                    }
+                }
 
                 NavHost(navController = navController, startDestination = "main") {
                     composable("main") {
@@ -51,11 +82,12 @@ class MainActivity : ComponentActivity() {
                             audioStatus = audio,
                             systemStatus = system,
                             hasAudioPermission = hasPermission,
+                            isServiceRunning = isRunning,
                             movementBpm = movementBpm,
                             audioBpm = audioBpm,
-                            onPermissionClick = {
-                                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                            },
+                            onStartClick = { requestPermissionsAndStart() },
+                            onStopClick = { vm.stopService() },
+                            onPermissionClick = { requestPermissionsAndStart() },
                             onClipListClick = { navController.navigate("clip_list") }
                         )
                     }
@@ -70,22 +102,40 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+    }
+
     override fun onResume() {
         super.onResume()
         if (::viewModel.isInitialized) {
             viewModel.refreshPermissionState()
-            viewModel.startSensors()
-            if (viewModel.hasAudioPermission.value) {
-                viewModel.startAudioProcessing()
-            }
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        if (::viewModel.isInitialized) {
-            viewModel.stopSensors()
-            viewModel.stopAudioProcessing()
+    private fun requestPermissionsAndStart() {
+        if (!viewModel.hasAudioPermission.value) {
+            pendingStartAfterPermissions = true
+            requestAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            return
+        }
+        if (!viewModel.hasNotificationPermission.value &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            pendingStartAfterPermissions = true
+            requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            return
+        }
+        viewModel.startService()
+    }
+
+    private fun maybeRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !viewModel.hasNotificationPermission.value) {
+            requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else if (pendingStartAfterPermissions) {
+            viewModel.startService()
+            pendingStartAfterPermissions = false
         }
     }
 }
