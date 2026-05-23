@@ -4,10 +4,30 @@ An Android app that identifies songs by matching your body's rhythm to the music
 
 ## How It Works
 
-1. The app detects your **movement BPM** via the gyroscope sensor
+1. The app detects your **movement BPM** via the accelerometer (so it works with the phone in your pocket)
 2. Simultaneously detects the **music BPM** via the microphone
 3. When both BPMs match (within 5 BPM tolerance), a 15-second audio snippet is saved
-4. You can review saved clips and identify songs via Google Search
+4. You can review saved clips and identify the song
+
+### Identifying the song
+
+The app tries to know the song as early as possible, and gives you several ways to find it later — all free, no paid API:
+
+- **At match time:** if the music is playing **through the phone**, the song's title/artist is read from the active media session and stored with the clip automatically (needs one-time *notification access*, offered via "Enable now-playing detection").
+- **From a saved clip, later:**
+  - **Identify this clip** — uploads the clip to ACRCloud (your own free-tier key, entered in Settings, stored encrypted on-device) and recognizes it even after the song has stopped.
+  - **Play to a song finder** — loops the clip out the speaker and opens an installed recognizer (Google Sound Search / Shazam / SoundHound) to listen.
+  - **What's playing now** — the live chain: read the device's now-playing, else launch a recognizer, else web-search.
+
+Once a clip's song is known, it shows the title/artist in the list with a one-tap web search.
+
+It runs as a background **foreground service**, so you can pocket the phone and keep dancing — no need to keep the app open. The cheap accelerometer runs continuously, but the **microphone only switches on once dancing is detected** and switches off again a few seconds after you stop — saving battery and keeping the mic off while you're still.
+
+### Tuning sensitivity
+
+- A **sensitivity knob** on the main screen sets how much movement counts as dancing (lower for vigorous dancing, higher for subtle motion).
+- Rating a saved clip **"False alarm"** nudges sensitivity down automatically (one-way — the app never raises it on its own; you do that with the knob).
+- The service watches its own **battery drain** and, when consumption is high, enters a power-saving mode that reduces sensitivity and stretches the audio-processing interval.
 
 ## Architecture
 
@@ -16,11 +36,11 @@ mademedance/
 ├── MainActivity.kt              # Thin shell: permissions, lifecycle, Compose UI
 ├── MainViewModel.kt             # Business logic, state management, coordination
 ├── AudioBpmDetector.kt          # FFT-based beat detection on microphone audio
-├── RhythmDetector.kt            # FFT-based movement BPM from gyroscope
+├── RhythmDetector.kt            # FFT-based movement BPM from accelerometer
 ├── data/
 │   └── ClipRepository.kt       # File-based clip management (list, delete)
 ├── sensor/
-│   └── MovementTracker.kt      # Gyroscope sensor wrapper, exposes BPM StateFlow
+│   └── MovementTracker.kt      # Accelerometer sensor wrapper, exposes BPM StateFlow
 └── ui/
     ├── MainScreen.kt            # Pulse ring animation, match proximity bar
     ├── ClipListScreen.kt        # Clip list with playback, deletion, identification

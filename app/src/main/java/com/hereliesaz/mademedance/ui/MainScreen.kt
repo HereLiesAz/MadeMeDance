@@ -23,7 +23,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -45,12 +47,20 @@ fun MainScreen(
     audioStatus: String,
     systemStatus: String,
     hasAudioPermission: Boolean,
+    isServiceRunning: Boolean,
     movementBpm: Float?,
     audioBpm: Float?,
-    isServiceRunning: Boolean,
+    sensitivity: Float,
+    batteryDrainPerHour: Float?,
+    powerSaving: Boolean,
+    hasNowPlayingAccess: Boolean,
+    onSensitivityChange: (Float) -> Unit,
+    onEnableNowPlaying: () -> Unit,
+    onStartClick: () -> Unit,
+    onStopClick: () -> Unit,
     onPermissionClick: () -> Unit,
-    onToggleService: () -> Unit,
-    onClipListClick: () -> Unit
+    onClipListClick: () -> Unit,
+    onSettingsClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -59,6 +69,9 @@ fun MainScreen(
                 actions = {
                     TextButton(onClick = onClipListClick) {
                         Text("Clips")
+                    }
+                    TextButton(onClick = onSettingsClick) {
+                        Text("Settings")
                     }
                 }
             )
@@ -72,33 +85,22 @@ fun MainScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Pulse ring visualization
             PulseRing(
                 movementBpm = movementBpm,
-                audioBpm = audioBpm
+                audioBpm = audioBpm,
+                active = isServiceRunning
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // BPM displays
-            Text(
-                text = movementStatus,
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text(text = movementStatus, style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = audioStatus,
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text(text = audioStatus, style = MaterialTheme.typography.titleMedium)
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Match proximity bar
             MatchProximityBar(movementBpm = movementBpm, audioBpm = audioBpm)
-
             Spacer(modifier = Modifier.height(24.dp))
 
-            // System status
             Text(
                 text = systemStatus,
                 style = MaterialTheme.typography.bodyLarge,
@@ -107,14 +109,57 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Permission button or service toggle
-            if (!hasAudioPermission) {
-                Button(onClick = onPermissionClick) {
-                    Text("Enable Microphone")
+            SensitivityControl(
+                sensitivity = sensitivity,
+                powerSaving = powerSaving,
+                batteryDrainPerHour = batteryDrainPerHour,
+                onSensitivityChange = onSensitivityChange
+            )
+
+            if (!hasNowPlayingAccess) {
+                TextButton(onClick = onEnableNowPlaying) {
+                    Text("Enable now-playing detection")
                 }
-            } else {
-                Button(onClick = onToggleService) {
-                    Text(if (isServiceRunning) "Stop Listening" else "Start Listening")
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            when {
+                !hasAudioPermission -> {
+                    Button(onClick = onPermissionClick) {
+                        Text("Enable Microphone & Start")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "MadeMeDance listens in the background. You can close the app.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                isServiceRunning -> {
+                    OutlinedButton(onClick = onStopClick) {
+                        Text("Stop listening")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Running in the background. Close the app — it'll keep listening.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                else -> {
+                    Button(onClick = onStartClick) {
+                        Text("Start listening")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Tap to start. The app runs as a background service — you don't need to keep it open.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }
@@ -122,21 +167,69 @@ fun MainScreen(
 }
 
 @Composable
+private fun SensitivityControl(
+    sensitivity: Float,
+    powerSaving: Boolean,
+    batteryDrainPerHour: Float?,
+    onSensitivityChange: (Float) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Sensitivity: ${"%.0f".format(sensitivity * 100)}%",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Slider(
+            value = sensitivity,
+            onValueChange = onSensitivityChange,
+            valueRange = 0f..1f,
+            modifier = Modifier.fillMaxWidth(0.8f)
+        )
+        Text(
+            text = "Lower for vigorous dancing, higher for subtle movement.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        if (batteryDrainPerHour != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = if (powerSaving) {
+                    "Battery: ~${"%.0f".format(batteryDrainPerHour)}%/hr — power-saving, sensitivity reduced"
+                } else {
+                    "Battery: ~${"%.0f".format(batteryDrainPerHour)}%/hr"
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = if (powerSaving) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
 private fun PulseRing(
     movementBpm: Float?,
-    audioBpm: Float?
+    audioBpm: Float?,
+    active: Boolean
 ) {
     val proximity = if (movementBpm != null && audioBpm != null) {
         val diff = abs(movementBpm - audioBpm)
-        (1f - (diff / 30f).coerceIn(0f, 1f)) // Closer = higher value
-    } else {
-        0f
-    }
+        (1f - (diff / 30f).coerceIn(0f, 1f))
+    } else 0f
 
     val ringColor by animateColorAsState(
         targetValue = when {
-            proximity > 0.83f -> Color(0xFF4CAF50) // Green — near match
-            proximity > 0.5f -> Color(0xFFFFC107)  // Amber — getting close
+            !active -> MaterialTheme.colorScheme.outlineVariant
+            proximity > 0.83f -> Color(0xFF4CAF50)
+            proximity > 0.5f -> Color(0xFFFFC107)
             movementBpm != null -> MaterialTheme.colorScheme.primary
             else -> MaterialTheme.colorScheme.outlineVariant
         },
@@ -144,13 +237,10 @@ private fun PulseRing(
         label = "ringColor"
     )
 
-    // Pulse animation based on movement BPM
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseDurationMs = if (movementBpm != null && movementBpm > 0f) {
         (60_000f / movementBpm).toInt().coerceIn(300, 2000)
-    } else {
-        1000
-    }
+    } else 1000
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 0.85f,
         targetValue = 1f,
@@ -161,7 +251,7 @@ private fun PulseRing(
         label = "pulseScale"
     )
 
-    val scale = if (movementBpm != null) pulseScale else 0.92f
+    val scale = if (active && movementBpm != null) pulseScale else 0.92f
 
     Box(
         contentAlignment = Alignment.Center,
@@ -174,7 +264,6 @@ private fun PulseRing(
                 radius = radius,
                 style = Stroke(width = 6.dp.toPx())
             )
-            // Inner glow ring when close to match
             if (proximity > 0.5f) {
                 drawCircle(
                     color = ringColor.copy(alpha = proximity * 0.3f),
@@ -183,7 +272,6 @@ private fun PulseRing(
                 )
             }
         }
-        // BPM text inside the ring
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = movementBpm?.let { "%.0f".format(it) } ?: "--",
@@ -207,10 +295,8 @@ private fun MatchProximityBar(
     val progress by animateFloatAsState(
         targetValue = if (movementBpm != null && audioBpm != null) {
             val diff = abs(movementBpm - audioBpm)
-            (1f - (diff / 10f)).coerceIn(0f, 1f) // 0 BPM diff = 100%, 10+ BPM diff = 0%
-        } else {
-            0f
-        },
+            (1f - (diff / 10f)).coerceIn(0f, 1f)
+        } else 0f,
         animationSpec = tween(300),
         label = "matchProgress"
     )

@@ -25,6 +25,14 @@ class AudioBpmDetector {
 
     @SuppressLint("MissingPermission")
     fun start() {
+        // Reset per-session state: the mic cycles on and off with movement, so
+        // stale beat timestamps or buffered audio from a previous session must
+        // not bleed into the next one.
+        energyHistory.clear()
+        beatTimestamps.clear()
+        ringWritePos = 0
+        ringBufferFilled = false
+
         bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
             .coerceAtLeast(fftSize * 2) // Ensure buffer is at least fftSize samples (16-bit = 2 bytes each)
         audioRecord = AudioRecord(
