@@ -55,8 +55,10 @@ fun ClipListScreen(
     // Refresh clip list whenever this screen becomes visible
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            clips.clear()
-            clipRepository?.let { clips.addAll(it.getClips()) }
+            clipRepository?.getClips()?.let {
+                clips.clear()
+                clips.addAll(it)
+            }
         }
     }
 
