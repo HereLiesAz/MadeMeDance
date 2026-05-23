@@ -10,13 +10,27 @@ import kotlin.math.sqrt
 
 class RhythmDetector {
 
+    companion object {
+        // Sensitivity 0 demands vigorous movement; 1 triggers on gentle motion.
+        // These m/s² endpoints are empirical and need on-device tuning.
+        private const val THRESHOLD_AT_MIN_SENSITIVITY = 120.0
+        private const val THRESHOLD_AT_MAX_SENSITIVITY = 15.0
+
+        fun thresholdForSensitivity(sensitivity: Float): Double {
+            val s = sensitivity.coerceIn(0f, 1f).toDouble()
+            return THRESHOLD_AT_MIN_SENSITIVITY +
+                s * (THRESHOLD_AT_MAX_SENSITIVITY - THRESHOLD_AT_MIN_SENSITIVITY)
+        }
+    }
+
     private val windowSize = 128
     private val dataQueue = ArrayDeque<Pair<Long, Double>>(windowSize)
 
     // Threshold on the dominant FFT bin of the gravity-removed accelerometer
-    // magnitude (m/s²). Empirical — needs on-device tuning; too high and gentle
-    // dancing won't register, too low and walking/jitter triggers it.
-    private val energyThreshold = 50.0
+    // magnitude (m/s²). Driven by the user's sensitivity setting; updated live
+    // by the service as the knob, ratings, or battery pressure change it.
+    @Volatile
+    var energyThreshold: Double = thresholdForSensitivity(0.5f)
 
     fun getMovementBpm(event: SensorEvent): Float? {
         val timestamp = event.timestamp

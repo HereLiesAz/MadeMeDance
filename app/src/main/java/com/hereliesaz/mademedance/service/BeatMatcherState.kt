@@ -27,6 +27,15 @@ object BeatMatcherState {
     private val _clipsChanged = MutableStateFlow(0)
     val clipsChanged: StateFlow<Int> = _clipsChanged.asStateFlow()
 
+    private val _batteryDrainPerHour = MutableStateFlow<Float?>(null)
+    val batteryDrainPerHour: StateFlow<Float?> = _batteryDrainPerHour.asStateFlow()
+
+    private val _powerSaving = MutableStateFlow(false)
+    val powerSaving: StateFlow<Boolean> = _powerSaving.asStateFlow()
+
+    internal fun setBatteryDrainPerHour(drain: Float?) { _batteryDrainPerHour.value = drain }
+    internal fun setPowerSaving(saving: Boolean) { _powerSaving.value = saving }
+
     internal fun setRunning(running: Boolean) { _isRunning.value = running }
     internal fun setMovementBpm(bpm: Float?) {
         _movementBpm.value = bpm

@@ -19,6 +19,10 @@ class MovementTracker(private val sensorManager: SensorManager) : SensorEventLis
     private val _bpm = MutableStateFlow<Float?>(null)
     val bpm: StateFlow<Float?> = _bpm.asStateFlow()
 
+    fun setEnergyThreshold(value: Double) {
+        rhythmDetector.energyThreshold = value
+    }
+
     fun start() {
         accelerometerSensor?.also { sensor ->
             sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_GAME)

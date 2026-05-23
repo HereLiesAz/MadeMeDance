@@ -5,9 +5,11 @@ import android.app.Application
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
+import com.hereliesaz.mademedance.data.ClipItem
 import com.hereliesaz.mademedance.data.ClipRepository
 import com.hereliesaz.mademedance.service.BeatMatcherService
 import com.hereliesaz.mademedance.service.BeatMatcherState
+import com.hereliesaz.mademedance.settings.SettingsStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +23,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val systemStatus: StateFlow<String> = BeatMatcherState.systemStatus
     val isServiceRunning: StateFlow<Boolean> = BeatMatcherState.isRunning
 
+    val sensitivity: StateFlow<Float> = SettingsStore.sensitivity
+    val batteryDrainPerHour: StateFlow<Float?> = BeatMatcherState.batteryDrainPerHour
+    val powerSaving: StateFlow<Boolean> = BeatMatcherState.powerSaving
+
     private val _hasAudioPermission = MutableStateFlow(false)
     val hasAudioPermission: StateFlow<Boolean> = _hasAudioPermission.asStateFlow()
 
@@ -30,6 +36,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val clipRepository = ClipRepository(application.getExternalFilesDir(null))
 
     init {
+        SettingsStore.init(application)
         refreshPermissionState()
     }
 
@@ -52,5 +59,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun stopService() {
         BeatMatcherService.stop(getApplication())
+    }
+
+    fun setSensitivity(value: Float) {
+        SettingsStore.setSensitivity(value)
+    }
+
+    /** Good catch — keep the clip, confirm the current sensitivity. */
+    fun acceptClip() {
+        SettingsStore.recordAccept()
+    }
+
+    /** False trigger — delete the clip and back the detector off. */
+    fun rejectClip(clip: ClipItem) {
+        SettingsStore.recordReject()
+        clipRepository.deleteClip(clip.name)
     }
 }

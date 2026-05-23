@@ -65,6 +65,9 @@ class MainActivity : ComponentActivity() {
                 val isRunning by vm.isServiceRunning.collectAsState()
                 val movementBpm by vm.movementBpm.collectAsState()
                 val audioBpm by vm.audioBpm.collectAsState()
+                val sensitivity by vm.sensitivity.collectAsState()
+                val batteryDrain by vm.batteryDrainPerHour.collectAsState()
+                val powerSaving by vm.powerSaving.collectAsState()
                 val navController = rememberNavController()
 
                 var navigatedToClips by remember { mutableStateOf(false) }
@@ -85,6 +88,10 @@ class MainActivity : ComponentActivity() {
                             isServiceRunning = isRunning,
                             movementBpm = movementBpm,
                             audioBpm = audioBpm,
+                            sensitivity = sensitivity,
+                            batteryDrainPerHour = batteryDrain,
+                            powerSaving = powerSaving,
+                            onSensitivityChange = { vm.setSensitivity(it) },
                             onStartClick = { requestPermissionsAndStart() },
                             onStopClick = { vm.stopService() },
                             onPermissionClick = { requestPermissionsAndStart() },
@@ -94,6 +101,8 @@ class MainActivity : ComponentActivity() {
                     composable("clip_list") {
                         ClipListScreen(
                             clipRepository = vm.clipRepository,
+                            onAccept = { vm.acceptClip() },
+                            onReject = { vm.rejectClip(it) },
                             onBackClick = { navController.popBackStack() }
                         )
                     }

@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.hardware.SensorManager
+import android.os.BatteryManager
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
@@ -22,7 +23,9 @@ import androidx.core.content.ContextCompat
 import com.hereliesaz.mademedance.AudioBpmDetector
 import com.hereliesaz.mademedance.MainActivity
 import com.hereliesaz.mademedance.R
+import com.hereliesaz.mademedance.RhythmDetector
 import com.hereliesaz.mademedance.sensor.MovementTracker
+import com.hereliesaz.mademedance.settings.SettingsStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -33,6 +36,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
+import java.util.ArrayDeque
 import kotlin.math.abs
 
 class BeatMatcherService : Service() {
@@ -49,6 +53,20 @@ class BeatMatcherService : Service() {
         private const val BPM_MATCH_THRESHOLD = 5.0
         private const val NOTIFICATION_UPDATE_INTERVAL_MS = 1000L
 
+        // Battery-driven power saving. Drain below DRAIN_OK_PER_HOUR is fine;
+        // at/above DRAIN_HIGH_PER_HOUR we apply the full backoff. Values are
+        // %/hour and empirical.
+        private const val BATTERY_SAMPLE_INTERVAL_MS = 60_000L
+        private const val BATTERY_WINDOW_MS = 10 * 60 * 1000L
+        private const val DRAIN_OK_PER_HOUR = 8f
+        private const val DRAIN_HIGH_PER_HOUR = 25f
+        private const val MAX_BATTERY_SENSITIVITY_PENALTY = 0.4f
+
+        // Audio processing cadence stretches under power saving — the real
+        // battery lever, since the mic + FFT loop dominates consumption.
+        private const val AUDIO_INTERVAL_MIN_MS = 100L
+        private const val AUDIO_INTERVAL_MAX_MS = 400L
+
         fun start(context: Context) {
             val intent = Intent(context, BeatMatcherService::class.java).setAction(ACTION_START)
             ContextCompat.startForegroundService(context, intent)
@@ -64,11 +82,21 @@ class BeatMatcherService : Service() {
     private var audioJob: Job? = null
     private var sensorJob: Job? = null
     private var notificationJob: Job? = null
+    private var batteryJob: Job? = null
+    private var sensitivityJob: Job? = null
 
     private lateinit var audioBpmDetector: AudioBpmDetector
     private lateinit var movementTracker: MovementTracker
     private var wakeLock: PowerManager.WakeLock? = null
     private var matchCounter = 0
+
+    private val batterySamples = ArrayDeque<Pair<Long, Float>>()
+
+    @Volatile
+    private var batteryPenalty = 0f
+
+    @Volatile
+    private var audioIntervalMs = AUDIO_INTERVAL_MIN_MS
 
     private val vibrator: Vibrator? by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -83,6 +111,7 @@ class BeatMatcherService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        SettingsStore.init(this)
         createNotificationChannels()
         val sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         movementTracker = MovementTracker(sensorManager)
@@ -144,7 +173,7 @@ class BeatMatcherService : Service() {
                     BeatMatcherState.setAudioBpm(bpm)
                     checkForMatch()
                 }
-                delay(100)
+                delay(audioIntervalMs)
             }
         }
 
@@ -154,6 +183,63 @@ class BeatMatcherService : Service() {
                 updateForegroundNotification()
             }
         }
+
+        // React to the user moving the sensitivity knob (or a rating lowering it).
+        sensitivityJob = scope.launch {
+            SettingsStore.sensitivity.collect { applyBackoff() }
+        }
+
+        batterySamples.clear()
+        batteryJob = scope.launch {
+            while (isActive) {
+                sampleBattery()
+                delay(BATTERY_SAMPLE_INTERVAL_MS)
+            }
+        }
+    }
+
+    /**
+     * Combine the persisted sensitivity with the current battery penalty
+     * (both can only lower it) into the effective threshold and processing
+     * cadence, then push them to the detector + audio loop.
+     */
+    private fun applyBackoff() {
+        val base = SettingsStore.sensitivity.value
+        val effective = (base - batteryPenalty).coerceIn(0f, 1f)
+        movementTracker.setEnergyThreshold(RhythmDetector.thresholdForSensitivity(effective))
+
+        val penaltyNorm = (batteryPenalty / MAX_BATTERY_SENSITIVITY_PENALTY).coerceIn(0f, 1f)
+        audioIntervalMs = AUDIO_INTERVAL_MIN_MS +
+            (penaltyNorm * (AUDIO_INTERVAL_MAX_MS - AUDIO_INTERVAL_MIN_MS)).toLong()
+
+        BeatMatcherState.setPowerSaving(batteryPenalty > 0f)
+    }
+
+    private fun sampleBattery() {
+        val bm = getSystemService(Context.BATTERY_SERVICE) as? BatteryManager ?: return
+        val pct = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+        if (pct !in 0..100) return
+
+        val now = System.currentTimeMillis()
+        batterySamples.addLast(now to pct.toFloat())
+        while (batterySamples.size > 1 && now - batterySamples.first.first > BATTERY_WINDOW_MS) {
+            batterySamples.removeFirst()
+        }
+
+        val oldest = batterySamples.first
+        val hours = (now - oldest.first) / 3_600_000.0
+        // Negative drain = charging; clamp to 0.
+        val drain = if (hours > 0.0) ((oldest.second - pct) / hours).toFloat().coerceAtLeast(0f) else null
+
+        batteryPenalty = if (drain == null) {
+            0f
+        } else {
+            val span = (DRAIN_HIGH_PER_HOUR - DRAIN_OK_PER_HOUR)
+            (((drain - DRAIN_OK_PER_HOUR) / span).coerceIn(0f, 1f)) * MAX_BATTERY_SENSITIVITY_PENALTY
+        }
+
+        BeatMatcherState.setBatteryDrainPerHour(drain)
+        applyBackoff()
     }
 
     private fun checkForMatch() {
@@ -199,12 +285,18 @@ class BeatMatcherService : Service() {
         audioJob?.cancel(); audioJob = null
         sensorJob?.cancel(); sensorJob = null
         notificationJob?.cancel(); notificationJob = null
+        batteryJob?.cancel(); batteryJob = null
+        sensitivityJob?.cancel(); sensitivityJob = null
         try { audioBpmDetector.stop() } catch (_: Exception) {}
         try { movementTracker.stop() } catch (_: Exception) {}
         releaseWakeLock()
+        batterySamples.clear()
+        batteryPenalty = 0f
         BeatMatcherState.setRunning(false)
         BeatMatcherState.setMovementBpm(null)
         BeatMatcherState.setAudioBpm(null)
+        BeatMatcherState.setBatteryDrainPerHour(null)
+        BeatMatcherState.setPowerSaving(false)
         BeatMatcherState.setSystemStatus("Service stopped.")
     }
 
@@ -289,11 +381,16 @@ class BeatMatcherService : Service() {
 
         val movement = BeatMatcherState.movementBpm.value
         val audio = BeatMatcherState.audioBpm.value
-        val title = "MadeMeDance is listening"
+        val drain = BeatMatcherState.batteryDrainPerHour.value
+        val powerSaving = BeatMatcherState.powerSaving.value
+        val title = if (powerSaving) "MadeMeDance (power-saving)" else "MadeMeDance is listening"
         val body = buildString {
             append(movement?.let { "You: ${"%.0f".format(it)} BPM" } ?: "You: -- BPM")
             append("   ")
             append(audio?.let { "Song: ${"%.0f".format(it)} BPM" } ?: "Song: -- BPM")
+            if (drain != null) {
+                append("   ~${"%.0f".format(drain)}%/hr")
+            }
         }
 
         return NotificationCompat.Builder(this, CHANNEL_STATUS)

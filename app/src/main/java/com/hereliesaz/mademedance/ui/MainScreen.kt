@@ -25,6 +25,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -49,6 +50,10 @@ fun MainScreen(
     isServiceRunning: Boolean,
     movementBpm: Float?,
     audioBpm: Float?,
+    sensitivity: Float,
+    batteryDrainPerHour: Float?,
+    powerSaving: Boolean,
+    onSensitivityChange: (Float) -> Unit,
     onStartClick: () -> Unit,
     onStopClick: () -> Unit,
     onPermissionClick: () -> Unit,
@@ -98,6 +103,15 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            SensitivityControl(
+                sensitivity = sensitivity,
+                powerSaving = powerSaving,
+                batteryDrainPerHour = batteryDrainPerHour,
+                onSensitivityChange = onSensitivityChange
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             when {
                 !hasAudioPermission -> {
                     Button(onClick = onPermissionClick) {
@@ -136,6 +150,54 @@ fun MainScreen(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SensitivityControl(
+    sensitivity: Float,
+    powerSaving: Boolean,
+    batteryDrainPerHour: Float?,
+    onSensitivityChange: (Float) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Sensitivity: ${"%.0f".format(sensitivity * 100)}%",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Slider(
+            value = sensitivity,
+            onValueChange = onSensitivityChange,
+            valueRange = 0f..1f,
+            modifier = Modifier.fillMaxWidth(0.8f)
+        )
+        Text(
+            text = "Lower for vigorous dancing, higher for subtle movement.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        if (batteryDrainPerHour != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = if (powerSaving) {
+                    "Battery: ~${"%.0f".format(batteryDrainPerHour)}%/hr — power-saving, sensitivity reduced"
+                } else {
+                    "Battery: ~${"%.0f".format(batteryDrainPerHour)}%/hr"
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = if (powerSaving) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                textAlign = TextAlign.Center
+            )
         }
     }
 }

@@ -7,9 +7,10 @@ import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -48,6 +49,8 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun ClipListScreen(
     clipRepository: ClipRepository?,
+    onAccept: (ClipItem) -> Unit = {},
+    onReject: (ClipItem) -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -79,31 +82,11 @@ fun ClipListScreen(
         AlertDialog(
             onDismissRequest = { showDialog = false },
             title = { Text(clip.formattedDate) },
-            text = { Text("What would you like to do with this clip?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDialog = false
-                    Toast.makeText(context, "Tap the microphone and hum the tune!", Toast.LENGTH_LONG).show()
-                    val intent = Intent(Intent.ACTION_WEB_SEARCH).apply {
-                        putExtra(SearchManager.QUERY, "what is this song")
-                    }
-                    context.startActivity(intent)
-                }) {
-                    Text("Identify")
-                }
-            },
-            dismissButton = {
-                Row {
+            text = {
+                Column {
+                    Text("Was this a real catch? Rating tunes how sensitive the detector is.")
+                    Spacer(modifier = Modifier.height(8.dp))
                     TextButton(onClick = {
-                        showDialog = false
-                        if (clipRepository?.deleteClip(clip.name) == true) {
-                            clips.remove(clip)
-                        }
-                    }) {
-                        Text("Delete")
-                    }
-                    TextButton(onClick = {
-                        showDialog = false
                         val file = clipRepository?.getClipFile(clip.name)
                         if (file != null) {
                             try {
@@ -116,8 +99,34 @@ fun ClipListScreen(
                             }
                         }
                     }) {
-                        Text("Review")
+                        Text("Review (play clip)")
                     }
+                    TextButton(onClick = {
+                        Toast.makeText(context, "Tap the microphone and hum the tune!", Toast.LENGTH_LONG).show()
+                        val intent = Intent(Intent.ACTION_WEB_SEARCH).apply {
+                            putExtra(SearchManager.QUERY, "what is this song")
+                        }
+                        context.startActivity(intent)
+                    }) {
+                        Text("Identify song")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDialog = false
+                    onAccept(clip)
+                }) {
+                    Text("Good catch")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showDialog = false
+                    onReject(clip)
+                    clips.remove(clip)
+                }) {
+                    Text("False alarm")
                 }
             }
         )

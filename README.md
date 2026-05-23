@@ -9,6 +9,14 @@ An Android app that identifies songs by matching your body's rhythm to the music
 3. When both BPMs match (within 5 BPM tolerance), a 15-second audio snippet is saved
 4. You can review saved clips and identify songs via Google Search
 
+It runs as a background **foreground service**, so you can pocket the phone and keep dancing — no need to keep the app open.
+
+### Tuning sensitivity
+
+- A **sensitivity knob** on the main screen sets how much movement counts as dancing (lower for vigorous dancing, higher for subtle motion).
+- Rating a saved clip **"False alarm"** nudges sensitivity down automatically (one-way — the app never raises it on its own; you do that with the knob).
+- The service watches its own **battery drain** and, when consumption is high, enters a power-saving mode that reduces sensitivity and stretches the audio-processing interval.
+
 ## Architecture
 
 ```
