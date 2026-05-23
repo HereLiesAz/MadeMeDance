@@ -46,6 +46,9 @@ class BeatMatcherService : Service() {
         private const val NOTIFICATION_ID_STATUS = 1001
         private const val NOTIFICATION_ID_MATCH_BASE = 2000
 
+        private const val BPM_MATCH_THRESHOLD = 5.0
+        private const val NOTIFICATION_UPDATE_INTERVAL_MS = 1000L
+
         fun start(context: Context) {
             val intent = Intent(context, BeatMatcherService::class.java).setAction(ACTION_START)
             ContextCompat.startForegroundService(context, intent)
@@ -60,6 +63,7 @@ class BeatMatcherService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var audioJob: Job? = null
     private var sensorJob: Job? = null
+    private var notificationJob: Job? = null
 
     private lateinit var audioBpmDetector: AudioBpmDetector
     private lateinit var movementTracker: MovementTracker
@@ -113,6 +117,8 @@ class BeatMatcherService : Service() {
 
         if (!hasMic) {
             BeatMatcherState.setSystemStatus("Microphone permission required.")
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
             return
         }
 
@@ -141,12 +147,19 @@ class BeatMatcherService : Service() {
                 delay(100)
             }
         }
+
+        notificationJob = scope.launch {
+            while (isActive) {
+                delay(NOTIFICATION_UPDATE_INTERVAL_MS)
+                updateForegroundNotification()
+            }
+        }
     }
 
     private fun checkForMatch() {
         val movement = BeatMatcherState.movementBpm.value
         val audio = BeatMatcherState.audioBpm.value
-        if (movement != null && audio != null && abs(movement - audio) < 5.0) {
+        if (movement != null && audio != null && abs(movement - audio) < BPM_MATCH_THRESHOLD) {
             BeatMatcherState.setSystemStatus("BPM match! Saving snippet...")
             vibrateOnMatch()
             val savedFile = saveAudioSnippet()
@@ -185,6 +198,7 @@ class BeatMatcherService : Service() {
     private fun stopWork() {
         audioJob?.cancel(); audioJob = null
         sensorJob?.cancel(); sensorJob = null
+        notificationJob?.cancel(); notificationJob = null
         try { audioBpmDetector.stop() } catch (_: Exception) {}
         try { movementTracker.stop() } catch (_: Exception) {}
         releaseWakeLock()
@@ -205,7 +219,7 @@ class BeatMatcherService : Service() {
         val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MadeMeDance::BeatMatcher").apply {
             setReferenceCounted(false)
-            acquire(60L * 60L * 1000L) // 1 hour safety cap; service will re-acquire if needed
+            acquire()
         }
     }
 
