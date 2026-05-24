@@ -72,8 +72,11 @@ class RhythmDetector {
         for (m in magnitudes) sum += m
         val mean = sum / windowSize
 
+        val firstPart = windowSize - head
+        System.arraycopy(magnitudes, head, fftInput, 0, firstPart)
+        System.arraycopy(magnitudes, 0, fftInput, firstPart, head)
         for (i in 0 until windowSize) {
-            fftInput[i] = magnitudes[(head + i) % windowSize] - mean
+            fftInput[i] -= mean
         }
         val fftResults = transformer.transform(fftInput, TransformType.FORWARD)
 
