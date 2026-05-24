@@ -5,7 +5,6 @@ import org.apache.commons.math3.complex.Complex
 import org.apache.commons.math3.transform.DftNormalization
 import org.apache.commons.math3.transform.FastFourierTransformer
 import org.apache.commons.math3.transform.TransformType
-import java.util.*
 import kotlin.math.sqrt
 
 class RhythmDetector {
@@ -24,7 +23,18 @@ class RhythmDetector {
     }
 
     private val windowSize = 128
-    private val dataQueue = ArrayDeque<Pair<Long, Double>>(windowSize)
+
+    // Circular buffers of primitives — sensor events arrive at SENSOR_DELAY_GAME,
+    // so a per-event Pair allocation would churn the GC. head = oldest sample.
+    private val timestamps = LongArray(windowSize)
+    private val magnitudes = DoubleArray(windowSize)
+    private var head = 0
+    private var size = 0
+
+    // Reused FFT input (chronological, gravity-removed); avoids re-allocating
+    // an array every event. The transformer is stateless and reusable.
+    private val fftInput = DoubleArray(windowSize)
+    private val transformer = FastFourierTransformer(DftNormalization.STANDARD)
 
     // Threshold on the dominant FFT bin of the gravity-removed accelerometer
     // magnitude (m/s²). Driven by the user's sensitivity setting; updated live
@@ -33,20 +43,23 @@ class RhythmDetector {
     var energyThreshold: Double = thresholdForSensitivity(0.5f)
 
     fun getMovementBpm(event: SensorEvent): Float? {
-        val timestamp = event.timestamp
         val v = event.values
         val magnitude = sqrt((v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).toDouble())
 
-        dataQueue.addLast(Pair(timestamp, magnitude))
-        if (dataQueue.size > windowSize) {
-            dataQueue.removeFirst()
+        val index = if (size < windowSize) {
+            ((head + size) % windowSize).also { size++ }
+        } else {
+            head.also { head = (head + 1) % windowSize }
         }
-        if (dataQueue.size < windowSize) {
+        timestamps[index] = event.timestamp
+        magnitudes[index] = magnitude
+
+        if (size < windowSize) {
             return null // Not enough data yet
         }
 
-        val firstTimestamp = dataQueue.first.first
-        val lastTimestamp = dataQueue.last.first
+        val firstTimestamp = timestamps[head]
+        val lastTimestamp = timestamps[(head + windowSize - 1) % windowSize]
         val durationNanos = lastTimestamp - firstTimestamp
         if (durationNanos <= 0L) return null
 
@@ -55,10 +68,17 @@ class RhythmDetector {
 
         // Subtract the mean so gravity (a large DC offset on the accelerometer)
         // doesn't dominate; what's left is the oscillation from body movement.
-        val mean = dataQueue.sumOf { it.second } / windowSize
-        val transformer = FastFourierTransformer(DftNormalization.STANDARD)
-        val complexData = dataQueue.map { Complex(it.second - mean) }.toTypedArray()
-        val fftResults = transformer.transform(complexData, TransformType.FORWARD)
+        var sum = 0.0
+        for (m in magnitudes) sum += m
+        val mean = sum / windowSize
+
+        val firstPart = windowSize - head
+        System.arraycopy(magnitudes, head, fftInput, 0, firstPart)
+        System.arraycopy(magnitudes, 0, fftInput, firstPart, head)
+        for (i in 0 until windowSize) {
+            fftInput[i] -= mean
+        }
+        val fftResults = transformer.transform(fftInput, TransformType.FORWARD)
 
         var maxMagnitude = -1.0
         var dominantBin = 0
