@@ -51,8 +51,12 @@ object SongIdentifier {
         val enabled = Settings.Secure.getString(
             context.contentResolver, "enabled_notification_listeners"
         ) ?: return false
-        val me = context.packageName
-        return enabled.split(":").any { it.contains(me) }
+        val mine = ComponentName(context, NowPlayingListenerService::class.java)
+        // Exact component match — a substring check would false-positive on any
+        // app whose package merely contains ours.
+        return enabled.split(":").any { entry ->
+            ComponentName.unflattenFromString(entry) == mine
+        }
     }
 
     fun openNotificationAccessSettings(context: Context) {
