@@ -5,8 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
-
-// --- Version Management ---
+// Load version properties
 val versionPropsFile = project.rootProject.file("version.properties")
 val versionProps = Properties().apply {
     if (versionPropsFile.exists()) {
@@ -14,9 +13,17 @@ val versionProps = Properties().apply {
     }
 }
 
+// Load local properties
+val localProperties = Properties().apply {
+    val localPropertiesFile = project.rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}
+
 var currentVersionCode = versionProps.getProperty("versionBuild", "1").toInt()
 
-// Auto-increment versionCode for release builds
+// Automatically increment versionCode for release builds
 val isReleaseBuild = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
 if (isReleaseBuild) {
     currentVersionCode++
@@ -31,14 +38,16 @@ val verMinor = versionProps.getProperty("versionMinor", "0")
 val verPatch = versionProps.getProperty("versionPatch", "0")
 val currentVersionName = "$verMajor.$verMinor.$verPatch"
 
+
+
 android {
     namespace = "com.hereliesaz.mademedance"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.hereliesaz.mademedance"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 37
         versionCode = currentVersionCode
         versionName = currentVersionName
 
@@ -56,12 +65,10 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
+
     buildFeatures {
         compose = true
     }
