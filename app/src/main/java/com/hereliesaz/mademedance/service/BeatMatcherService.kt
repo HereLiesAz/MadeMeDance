@@ -358,7 +358,7 @@ class BeatMatcherService : Service() {
         val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MadeMeDance::BeatMatcher").apply {
             setReferenceCounted(false)
-            acquire()
+            acquire(4 * 60 * 60 * 1000L) // 4-hour timeout safety net
         }
     }
 

@@ -45,8 +45,8 @@ class AudioBpmDetector {
         audioRecord?.startRecording()
     }
 
-    private val energyHistory = mutableListOf<Double>()
     private val historySize = 43 // Approx 1 second of history at 44100/1024 rate
+    private val energyHistory = ArrayDeque<Double>(historySize + 1)
     private val beatTimestamps = mutableListOf<Long>()
     private val beatThresholdFactor = 1.5
 
@@ -68,12 +68,14 @@ class AudioBpmDetector {
         }
 
         // Write to ring buffer (no allocations)
-        for (i in 0 until readResult) {
-            ringBuffer[ringWritePos] = buffer[i]
-            ringWritePos++
-            if (ringWritePos >= ringBufferCapacity) {
-                ringWritePos = 0
-                ringBufferFilled = true
+        synchronized(ringBuffer) {
+            for (i in 0 until readResult) {
+                ringBuffer[ringWritePos] = buffer[i]
+                ringWritePos++
+                if (ringWritePos >= ringBufferCapacity) {
+                    ringWritePos = 0
+                    ringBufferFilled = true
+                }
             }
         }
 
@@ -101,9 +103,9 @@ class AudioBpmDetector {
             val averageEnergy = energyHistory.average()
             val isBeat = currentEnergy > averageEnergy * beatThresholdFactor
 
-            energyHistory.add(currentEnergy)
+            energyHistory.addLast(currentEnergy)
             if (energyHistory.size > historySize) {
-                energyHistory.removeAt(0)
+                energyHistory.removeFirst()
             }
 
             if (isBeat) {
@@ -133,20 +135,23 @@ class AudioBpmDetector {
 
     @Throws(IOException::class)
     fun saveSnippet(file: File) {
-        val data: ShortArray = if (ringBufferFilled) {
-            // Buffer has wrapped: read from writePos to end, then start to writePos
-            val result = ShortArray(ringBufferCapacity)
-            System.arraycopy(ringBuffer, ringWritePos, result, 0, ringBufferCapacity - ringWritePos)
-            System.arraycopy(ringBuffer, 0, result, ringBufferCapacity - ringWritePos, ringWritePos)
-            result
-        } else {
-            // Buffer hasn't wrapped yet: read from 0 to writePos
-            ringBuffer.copyOfRange(0, ringWritePos)
+        val data: ShortArray = synchronized(ringBuffer) {
+            if (ringBufferFilled) {
+                // Buffer has wrapped: read from writePos to end, then start to writePos
+                val pos = ringWritePos
+                val result = ShortArray(ringBufferCapacity)
+                System.arraycopy(ringBuffer, pos, result, 0, ringBufferCapacity - pos)
+                System.arraycopy(ringBuffer, 0, result, ringBufferCapacity - pos, pos)
+                result
+            } else {
+                // Buffer hasn't wrapped yet: read from 0 to writePos
+                ringBuffer.copyOfRange(0, ringWritePos)
+            }
         }
-        val outputStream = FileOutputStream(file)
-        writeWavHeader(outputStream, data.size * 2)
-        outputStream.write(shortArrayToByteArray(data))
-        outputStream.close()
+        FileOutputStream(file).use { outputStream ->
+            writeWavHeader(outputStream, data.size * 2)
+            outputStream.write(shortArrayToByteArray(data))
+        }
     }
 
     private fun shortArrayToByteArray(shortArray: ShortArray): ByteArray {
@@ -197,7 +202,7 @@ class AudioBpmDetector {
         header[29] = (byteRate shr 8 and 0xff).toByte()
         header[30] = (byteRate shr 16 and 0xff).toByte()
         header[31] = (byteRate shr 24 and 0xff).toByte()
-        header[32] = (2 * 16 / 8).toByte()
+        header[32] = (channels * 16 / 8).toByte()
         header[33] = 0
         header[34] = 16
         header[35] = 0

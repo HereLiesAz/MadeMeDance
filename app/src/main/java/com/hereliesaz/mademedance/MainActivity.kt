@@ -41,6 +41,7 @@ class MainActivity : ComponentActivity() {
     // Bumped each time an "Identify" intent arrives (cold start or onNewIntent),
     // so the Compose tree can run the identification chain exactly once per tap.
     private val identifyTrigger = MutableStateFlow(0)
+    private val clipsTrigger = MutableStateFlow(0)
 
     private val requestAudioPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -62,7 +63,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val openClipsOnLaunch = intent?.getBooleanExtra(EXTRA_OPEN_CLIPS, false) == true
+        if (intent?.getBooleanExtra(EXTRA_OPEN_CLIPS, false) == true) {
+            clipsTrigger.value++
+        }
         if (intent?.getBooleanExtra(EXTRA_IDENTIFY, false) == true) {
             identifyTrigger.value++
         }
@@ -90,11 +93,10 @@ class MainActivity : ComponentActivity() {
                 val acrSecret by vm.acrSecret.collectAsState()
                 val navController = rememberNavController()
 
-                var navigatedToClips by remember { mutableStateOf(false) }
-                LaunchedEffect(openClipsOnLaunch) {
-                    if (openClipsOnLaunch && !navigatedToClips) {
+                val openClips by clipsTrigger.collectAsState()
+                LaunchedEffect(openClips) {
+                    if (openClips > 0) {
                         navController.navigate("clip_list")
-                        navigatedToClips = true
                     }
                 }
 
@@ -168,6 +170,9 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        if (intent.getBooleanExtra(EXTRA_OPEN_CLIPS, false)) {
+            clipsTrigger.value++
+        }
         if (intent.getBooleanExtra(EXTRA_IDENTIFY, false)) {
             identifyTrigger.value++
         }
