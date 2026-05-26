@@ -23,6 +23,10 @@ Once a clip's song is known, it shows the title/artist in the list with a one-ta
 
 It runs as a background **foreground service**, so you can pocket the phone and keep dancing — no need to keep the app open. The cheap accelerometer runs continuously, but the **microphone only switches on once dancing is detected** and switches off again a few seconds after you stop — saving battery and keeping the mic off while you're still.
 
+### Ignoring walking
+
+A walk has a steady footfall cadence that lands in the same BPM range as music, so on its own it would trigger constant false matches. The app watches the device's **step-detector sensor**: when it sees a sustained, regular walking/running cadence, it treats the motion as walking and **suppresses matches** (and leaves the mic off) until you stop. Dance footwork is comparatively irregular, so it's left alone. This needs a one-time *physical activity* permission; if it's declined or the device has no step detector, the app simply behaves as before.
+
 ### Tuning sensitivity
 
 - A **sensitivity knob** on the main screen sets how much movement counts as dancing (lower for vigorous dancing, higher for subtle motion).
@@ -40,7 +44,8 @@ mademedance/
 ├── data/
 │   └── ClipRepository.kt       # File-based clip management (list, delete)
 ├── sensor/
-│   └── MovementTracker.kt      # Accelerometer sensor wrapper, exposes BPM StateFlow
+│   ├── MovementTracker.kt      # Accelerometer sensor wrapper, exposes BPM StateFlow
+│   └── WalkingDetector.kt      # Step-sensor gait detector; flags walking to suppress matches
 └── ui/
     ├── MainScreen.kt            # Pulse ring animation, match proximity bar
     ├── ClipListScreen.kt        # Clip list with playback, deletion, identification
@@ -69,6 +74,7 @@ Requires Android Studio and the Android SDK.
 ## Permissions
 
 - `RECORD_AUDIO` — microphone access for music BPM detection
+- `ACTIVITY_RECOGNITION` — step-detector access to recognise and ignore walking (optional; granted at runtime on Android 10+)
 
 ## License
 

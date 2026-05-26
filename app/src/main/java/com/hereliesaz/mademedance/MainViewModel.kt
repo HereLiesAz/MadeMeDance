@@ -56,6 +56,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _hasNotificationPermission = MutableStateFlow(false)
     val hasNotificationPermission: StateFlow<Boolean> = _hasNotificationPermission.asStateFlow()
 
+    private val _hasActivityRecognitionPermission = MutableStateFlow(false)
+    val hasActivityRecognitionPermission: StateFlow<Boolean> =
+        _hasActivityRecognitionPermission.asStateFlow()
+
     private val _hasNowPlayingAccess = MutableStateFlow(false)
     val hasNowPlayingAccess: StateFlow<Boolean> = _hasNowPlayingAccess.asStateFlow()
 
@@ -75,6 +79,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                 ContextCompat.checkSelfPermission(
                     ctx, Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            } else true
+        _hasActivityRecognitionPermission.value =
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                ContextCompat.checkSelfPermission(
+                    ctx, Manifest.permission.ACTIVITY_RECOGNITION
                 ) == PackageManager.PERMISSION_GRANTED
             } else true
         _hasNowPlayingAccess.value = SongIdentifier.hasNotificationAccess(ctx)

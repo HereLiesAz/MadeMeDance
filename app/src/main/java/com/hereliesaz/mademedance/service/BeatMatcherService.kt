@@ -28,6 +28,7 @@ import com.hereliesaz.mademedance.data.writeClipMeta
 import com.hereliesaz.mademedance.identify.IdentifyResult
 import com.hereliesaz.mademedance.identify.SongIdentifier
 import com.hereliesaz.mademedance.sensor.MovementTracker
+import com.hereliesaz.mademedance.sensor.WalkingDetector
 import com.hereliesaz.mademedance.settings.SettingsStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -97,6 +98,7 @@ class BeatMatcherService : Service() {
 
     private lateinit var audioBpmDetector: AudioBpmDetector
     private lateinit var movementTracker: MovementTracker
+    private lateinit var walkingDetector: WalkingDetector
     private var wakeLock: PowerManager.WakeLock? = null
     private var matchCounter = 0
 
@@ -128,6 +130,7 @@ class BeatMatcherService : Service() {
         createNotificationChannels()
         val sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         movementTracker = MovementTracker(sensorManager)
+        walkingDetector = WalkingDetector(sensorManager)
         audioBpmDetector = AudioBpmDetector()
     }
 
@@ -166,14 +169,23 @@ class BeatMatcherService : Service() {
 
         if (movementTracker.isAvailable) {
             movementTracker.start()
+            walkingDetector.start()
             BeatMatcherState.setSystemStatus("Waiting for you to dance…")
             sensorJob = scope.launch {
                 movementTracker.bpm.collect { bpm ->
                     if (bpm != null) {
                         BeatMatcherState.setMovementBpm(bpm)
-                        lastDanceMs = System.currentTimeMillis()
-                        ensureAudioRunning()
-                        checkForMatch()
+                        // Walking's footfall cadence reads as a movement BPM; skip
+                        // the match path (and leave the mic off) while it's detected.
+                        val walking = walkingDetector.isWalking()
+                        BeatMatcherState.setWalking(walking)
+                        if (walking) {
+                            BeatMatcherState.setSystemStatus("Walking detected — ignoring movement.")
+                        } else {
+                            lastDanceMs = System.currentTimeMillis()
+                            ensureAudioRunning()
+                            checkForMatch()
+                        }
                     }
                 }
             }
@@ -196,6 +208,9 @@ class BeatMatcherService : Service() {
         notificationJob = scope.launch {
             while (isActive) {
                 delay(NOTIFICATION_UPDATE_INTERVAL_MS)
+                // Refresh so the flag clears within ~1s of the walk stopping, even
+                // when no movement events arrive to drive the collector above.
+                BeatMatcherState.setWalking(walkingDetector.isWalking())
                 updateForegroundNotification()
             }
         }
@@ -285,6 +300,8 @@ class BeatMatcherService : Service() {
     }
 
     private fun checkForMatch() {
+        // The audio loop also calls this; bail if the movement is just walking.
+        if (walkingDetector.isWalking()) return
         val movement = BeatMatcherState.movementBpm.value
         val audio = BeatMatcherState.audioBpm.value
         if (movement != null && audio != null && abs(movement - audio) < BPM_MATCH_THRESHOLD) {
@@ -337,6 +354,7 @@ class BeatMatcherService : Service() {
         sensitivityJob?.cancel(); sensitivityJob = null
         stopAudio()
         try { movementTracker.stop() } catch (_: Exception) {}
+        try { walkingDetector.stop() } catch (_: Exception) {}
         releaseWakeLock()
         batterySamples.clear()
         batteryPenalty = 0f
@@ -344,6 +362,7 @@ class BeatMatcherService : Service() {
         BeatMatcherState.setMovementBpm(null)
         BeatMatcherState.setBatteryDrainPerHour(null)
         BeatMatcherState.setPowerSaving(false)
+        BeatMatcherState.setWalking(false)
         BeatMatcherState.setSystemStatus("Service stopped.")
     }
 
@@ -430,10 +449,10 @@ class BeatMatcherService : Service() {
         val audio = BeatMatcherState.audioBpm.value
         val drain = BeatMatcherState.batteryDrainPerHour.value
         val powerSaving = BeatMatcherState.powerSaving.value
-        val base = if (BeatMatcherState.micActive.value) {
-            "Listening for the song"
-        } else {
-            "Watching for dancing"
+        val base = when {
+            BeatMatcherState.walking.value -> "Walking — ignoring"
+            BeatMatcherState.micActive.value -> "Listening for the song"
+            else -> "Watching for dancing"
         }
         val title = if (powerSaving) "$base (power-saving)" else base
         val body = buildString {
