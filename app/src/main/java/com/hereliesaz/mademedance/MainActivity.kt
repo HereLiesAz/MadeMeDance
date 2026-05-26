@@ -38,6 +38,10 @@ class MainActivity : ComponentActivity() {
     private lateinit var viewModel: MainViewModel
     private var pendingStartAfterPermissions = false
 
+    // Walking detection (step sensor) is optional, so we ask for its permission at
+    // most once per launch and start the service regardless of the answer.
+    private var activityRecognitionAsked = false
+
     // Bumped each time an "Identify" intent arrives (cold start or onNewIntent),
     // so the Compose tree can run the identification chain exactly once per tap.
     private val identifyTrigger = MutableStateFlow(0)
@@ -51,6 +55,16 @@ class MainActivity : ComponentActivity() {
         }
 
     private val requestNotificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ ->
+            viewModel.refreshPermissionState()
+            if (pendingStartAfterPermissions && viewModel.hasAudioPermission.value) {
+                maybeRequestActivityRecognitionThenStart()
+            } else {
+                pendingStartAfterPermissions = false
+            }
+        }
+
+    private val requestActivityRecognitionPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ ->
             viewModel.refreshPermissionState()
             if (pendingStartAfterPermissions && viewModel.hasAudioPermission.value) {
@@ -197,14 +211,34 @@ class MainActivity : ComponentActivity() {
             requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             return
         }
-        viewModel.startService()
+        pendingStartAfterPermissions = true
+        maybeRequestActivityRecognitionThenStart()
     }
 
     private fun maybeRequestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             !viewModel.hasNotificationPermission.value) {
             requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        } else if (pendingStartAfterPermissions) {
+        } else {
+            maybeRequestActivityRecognitionThenStart()
+        }
+    }
+
+    /**
+     * Walking detection needs ACTIVITY_RECOGNITION (API 29+). It's optional — if
+     * denied or unavailable, the service still starts and simply won't suppress
+     * walking. Asked at most once per launch so a decline isn't nagged.
+     */
+    private fun maybeRequestActivityRecognitionThenStart() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+            !viewModel.hasActivityRecognitionPermission.value &&
+            !activityRecognitionAsked) {
+            activityRecognitionAsked = true
+            requestActivityRecognitionPermissionLauncher
+                .launch(Manifest.permission.ACTIVITY_RECOGNITION)
+            return
+        }
+        if (pendingStartAfterPermissions) {
             viewModel.startService()
             pendingStartAfterPermissions = false
         }
