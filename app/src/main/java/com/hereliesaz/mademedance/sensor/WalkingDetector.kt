@@ -106,7 +106,7 @@ class WalkingDetector(private val sensorManager: SensorManager) : SensorEventLis
 
     override fun onSensorChanged(event: SensorEvent?) {
         if (event?.sensor?.type != Sensor.TYPE_STEP_DETECTOR) return
-        val now = System.currentTimeMillis()
+        val now = System.nanoTime() / 1_000_000L
         synchronized(lock) {
             stepTimes.addLast(now)
             prune(now)
