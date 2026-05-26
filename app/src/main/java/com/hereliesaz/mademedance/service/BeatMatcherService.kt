@@ -301,7 +301,7 @@ class BeatMatcherService : Service() {
 
     private fun checkForMatch() {
         // The audio loop also calls this; bail if the movement is just walking.
-        if (walkingDetector.isWalking()) return
+        if (walkingDetector.walking.value) return
         val movement = BeatMatcherState.movementBpm.value
         val audio = BeatMatcherState.audioBpm.value
         if (movement != null && audio != null && abs(movement - audio) < BPM_MATCH_THRESHOLD) {
