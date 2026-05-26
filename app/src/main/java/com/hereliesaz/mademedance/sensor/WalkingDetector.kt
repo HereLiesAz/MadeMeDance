@@ -96,7 +96,7 @@ class WalkingDetector(private val sensorManager: SensorManager) : SensorEventLis
      * Prunes the look-back window to [now] and recomputes, updating [walking].
      * Call at decision time so the flag both engages and clears promptly.
      */
-    fun isWalking(now: Long = System.currentTimeMillis()): Boolean {
+    fun isWalking(now: Long = System.nanoTime() / 1_000_000L): Boolean {
         val recent = synchronized(lock) {
             prune(now)
             stepTimes.toList()
