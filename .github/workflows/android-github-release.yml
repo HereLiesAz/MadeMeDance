@@ -14,7 +14,6 @@ on:
       - "version.properties"
   workflow_dispatch:
 permissions: {}
-permissions: {}
 jobs:
   hand-off:
     runs-on: ubuntu-latest
