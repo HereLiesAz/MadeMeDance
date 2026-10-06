@@ -21,11 +21,15 @@ val localProperties = Properties().apply {
     }
 }
 
-var currentVersionCode = versionProps.getProperty("versionBuild", "1").toInt()
+// Central release (HereLiesAz/workflows) passes -PversionCodeOverride / -PversionName.
+val versionCodeOverride = (findProperty("versionCodeOverride") as String?)?.toIntOrNull()
+val versionNameOverride = (findProperty("versionNameOverride") ?: findProperty("versionName")) as String?
 
-// Automatically increment versionCode for release builds
+var currentVersionCode = versionCodeOverride ?: versionProps.getProperty("versionBuild", "1").toInt()
+
+// Automatically increment versionCode for local release builds (not when CI supplies one)
 val isReleaseBuild = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
-if (isReleaseBuild) {
+if (isReleaseBuild && versionCodeOverride == null) {
     currentVersionCode++
     versionProps.setProperty("versionBuild", currentVersionCode.toString())
     versionPropsFile.outputStream().use {
@@ -36,7 +40,7 @@ if (isReleaseBuild) {
 val verMajor = versionProps.getProperty("versionMajor", "1")
 val verMinor = versionProps.getProperty("versionMinor", "0")
 val verPatch = versionProps.getProperty("versionPatch", "0")
-val currentVersionName = "$verMajor.$verMinor.$verPatch"
+val currentVersionName = versionNameOverride ?: "$verMajor.$verMinor.$verPatch"
 
 
 
