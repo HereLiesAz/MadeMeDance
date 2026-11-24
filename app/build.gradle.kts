@@ -97,8 +97,8 @@ android {
 }
 
 dependencies {
-    implementation(libs.aznavrail.updates)
-    if (playUpdates.get()) implementation(libs.aznavrail.updates.play)
+    implementation(libs.aznavrail.update.core)
+    if (playUpdates.get()) implementation(libs.aznavrail.update.play)
     implementation(libs.commons.math3)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
