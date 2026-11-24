@@ -17,8 +17,8 @@ security-crypto = "1.1.0"
 
 
 [libraries]
-aznavrail-updates = { module = "com.github.HereLiesAz.AzNavRail:aznavrail-updates", version.ref = "azUpdates" }
-aznavrail-updates-play = { module = "com.github.HereLiesAz.AzNavRail:aznavrail-updates-play", version.ref = "azUpdates" }
+aznavrail-update-core = { module = "com.github.HereLiesAz.AzNavRail:aznavrail-updates", version.ref = "azUpdates" }
+aznavrail-update-play = { module = "com.github.HereLiesAz.AzNavRail:aznavrail-updates-play", version.ref = "azUpdates" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
