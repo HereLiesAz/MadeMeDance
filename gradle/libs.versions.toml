@@ -1,5 +1,5 @@
 [versions]
-azUpdates = "bfbbf1e9b89a7757a77d8607519d42b33422913d"
+azUpdates = "12.5"
 agp = "9.2.1"
 kotlin = "2.3.21"
 coreKtx = "1.18.0"
