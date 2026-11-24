@@ -62,6 +62,14 @@ mademedance/
 - **Jetpack Navigation Compose** for screen routing
 - minSdk 24 (Android 7.0) / targetSdk 35
 
+## Updates
+
+The Android activity uses AzNavRail's shared installer-aware update checker on
+startup. Stable GitHub releases and actual Play update availability are checked
+only for their respective distributions. GitHub builds omit the Play SDK;
+debug builds skip checks. The central Play release enables its adapter via
+`releaseVersionCode`; local Play builds can use `-PazPlayUpdates=true`.
+
 ## Building
 
 Requires Android Studio and the Android SDK.

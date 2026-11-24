@@ -44,6 +44,10 @@ val currentVersionName = versionNameOverride ?: "$verMajor.$verMinor.$verPatch"
 
 
 
+// releaseVersionCode is supplied only by the central Play release workflow.
+val playUpdates = providers.gradleProperty("azPlayUpdates").map { it.toBooleanStrict() }
+    .orElse(providers.gradleProperty("releaseVersionCode").map { true }).orElse(false)
+
 android {
     namespace = "com.hereliesaz.mademedance"
     compileSdk = 37
@@ -73,6 +77,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
+    sourceSets.getByName("main").java.srcDir(
+        if (playUpdates.get()) "src/playUpdates/kotlin" else "src/githubUpdates/kotlin"
+    )
+
     buildFeatures {
         compose = true
     }
@@ -89,6 +97,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.aznavrail.update.core)
+    if (playUpdates.get()) implementation(libs.aznavrail.update.play)
     implementation(libs.commons.math3)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

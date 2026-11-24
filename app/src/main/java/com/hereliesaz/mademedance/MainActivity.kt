@@ -76,6 +76,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        checkAppUpdates(this)
 
         if (intent?.getBooleanExtra(EXTRA_OPEN_CLIPS, false) == true) {
             clipsTrigger.value++
